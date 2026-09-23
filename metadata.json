@@ -1,0 +1,6 @@
+{
+  "name": "University Maintenance Request System",
+  "description": "A clean, professional, and trustworthy maintenance request portal for campus facilities, classrooms, dormitories, and campus infrastructure.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
