@@ -20,6 +20,7 @@ export interface TicketItem {
   photos?: string[];
   contactName?: string;
   contactPhone?: string;
+  contactEmail?: string;
 }
 
 export interface NewTicketInput {
@@ -31,6 +32,7 @@ export interface NewTicketInput {
   priority?: 'Urgent' | 'High' | 'Medium' | 'Low';
   contactName?: string;
   contactPhone?: string;
+  contactEmail?: string;
   photos?: string[];
 }
 
@@ -282,6 +284,44 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return initialTicketsData;
   });
 
+  const API_URL = ((import.meta as any).env?.VITE_API_BASE_URL as string) || 'http://localhost:5000';
+
+  // Load from Backend API if server is running, fallback to localStorage
+  useEffect(() => {
+    let isMounted = true;
+    const loadFromApi = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/tickets`, {
+          signal: AbortSignal.timeout(2000), // don't freeze if server isn't running
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0 && isMounted) {
+            setTickets((prev) => {
+              // Merge db tickets with local to ensure smooth transition
+              const map = new Map<string, TicketItem>();
+              data.forEach((t: any) => map.set(t.id, {
+                ...t,
+                date: t.submittedDate || new Date(t.createdAt).toLocaleDateString(),
+                createdAt: typeof t.createdAt === 'string' ? new Date(t.createdAt).getTime() : (t.createdAt || Date.now()),
+                reporterId: t.reporterId || 'student-me',
+                reporterName: t.reporterName || t.contactName || 'Supakorn (You)',
+              }));
+              prev.forEach(t => {
+                if (!map.has(t.id)) map.set(t.id, t);
+              });
+              return Array.from(map.values());
+            });
+          }
+        }
+      } catch {
+        // Backend not running, silently use localStorage
+      }
+    };
+    loadFromApi();
+    return () => { isMounted = false; };
+  }, [API_URL]);
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
@@ -349,9 +389,20 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       photos: input.photos || [],
       contactName: input.contactName || 'Supakorn Suksomboon',
       contactPhone: input.contactPhone || '081-234-5678',
+      contactEmail: input.contactEmail || 'supakorn@cmu.ac.th',
     };
 
     setTickets((prev) => [newTicket, ...prev]);
+
+    // Async sync to Backend API if server is running
+    fetch(`${API_URL}/api/tickets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTicket),
+    }).catch(() => {
+      // Backend not running, already saved in state & localStorage
+    });
+
     return newTicket;
   };
 
@@ -359,6 +410,15 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
     );
+
+    // Async sync to Backend API if server is running
+    fetch(`${API_URL}/api/tickets/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    }).catch(() => {
+      // Backend not running, already updated locally
+    });
   };
 
   const getTicketById = (id: string) => {

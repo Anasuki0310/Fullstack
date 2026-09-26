@@ -147,8 +147,9 @@ export default function SubmitRequestPage() {
     const room = (formData.get('room') as string) || '';
     const category = (formData.get('category') as string) || 'General';
     const description = (formData.get('description') as string) || '';
-    const contactName = (formData.get('name') as string) || 'Supakorn Suksomboon';
+    const contactName = (formData.get('name') as string) || displayName || 'Supakorn Suksomboon';
     const contactPhone = (formData.get('phone') as string) || '081-234-5678';
+    const contactEmail = (formData.get('email') as string) || email || 'student@cmu.ac.th';
 
     // Construct new ticket object containing actual input values (Building, Floor, Room, Category)
     // Add submittedDate property using current date (new Date().toLocaleDateString())
@@ -162,6 +163,7 @@ export default function SubmitRequestPage() {
       description,
       contactName,
       contactPhone,
+      contactEmail,
       priority: 'Medium',
       photos: images.map((img) => img.previewUrl),
     });
