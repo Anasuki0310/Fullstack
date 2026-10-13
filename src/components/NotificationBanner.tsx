@@ -1,16 +1,4 @@
-/**
- * @file NotificationBanner.tsx
- * @description คอมโพเนนต์แบนเนอร์แจ้งเตือนงานด่วนลอยมุมบนขวา (Floating Real-time Notification Banner)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. แสดงกล่องแจ้งเตือนป็อปอัปแบบ Floating Card ที่มุมบนขวาของหน้าจอ (`fixed top-4 right-4 z-[9999]`)
- * 2. ตอบสนองต่อเหตุการณ์สำคัญแบบเรียลไทม์ เช่น:
- *    - งานซ่อมเสร็จสิ้นสมบูรณ์ (Completed Alert - ธีมสีเขียวมรกต)
- *    - การเปลี่ยนสถานะงานหรือมอบหมายช่าง (Update Alert - ธีมสีน้ำเงินเข้ม)
- * 3. แสดงข้อมูลสถานะการส่งการแจ้งเตือน (LINE Alert badge, บันทึกลงกระดิ่งแจ้งเตือนแล้ว)
- * 4. มีปุ่มลัด "เปิดดูคำร้องนี้" (View ticket) เพื่อกดนำทางไปยังหน้ารายละเอียดตั๋วได้ทันที
- * 5. ปิดอัตโนมัติหรือปิดได้ด้วยตนเองผ่านปุ่ม X, ปุ่มรับทราบ, หรือกดปุ่ม Escape บนคีย์บอร์ด
- */
+
 
 import React, { useEffect } from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -40,11 +28,10 @@ export default function NotificationBanner() {
   return (
     <div className="fixed top-4 right-4 sm:top-5 sm:right-6 z-[9999] max-w-md w-[calc(100vw-2rem)] sm:w-full animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
       <div className={`rounded-2xl p-4 sm:p-5 shadow-2xl border backdrop-blur-md transition-all ${
-        isCompleted 
+        isCompleted
           ? 'bg-gradient-to-r from-emerald-900/95 via-green-800/95 to-teal-900/95 border-emerald-400/40 text-white ring-2 ring-emerald-400/30'
           : 'bg-gradient-to-r from-blue-900/95 via-indigo-900/95 to-slate-900/95 border-blue-400/40 text-white ring-2 ring-blue-400/30'
       }`}>
-        {/* Top Header Row */}
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex items-center gap-2.5">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${
@@ -61,7 +48,7 @@ export default function NotificationBanner() {
                 <span className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
                   isCompleted ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' : 'bg-blue-400/20 text-blue-300 border border-blue-400/30'
                 }`}>
-                  {isCompleted 
+                  {isCompleted
                     ? (language === 'th' ? '🎉 แจ้งเตือนเสร็จสิ้น' : '🎉 Completed Notification')
                     : (language === 'th' ? '🔔 มีการอัปเดต' : '🔔 Notification')}
                 </span>
@@ -85,12 +72,10 @@ export default function NotificationBanner() {
           </button>
         </div>
 
-        {/* Message body */}
         <p className="text-xs sm:text-sm text-white/90 leading-relaxed pl-11 mb-3">
           {activeAlert.message}
         </p>
 
-        {/* Badges / Integrations notification preview */}
         <div className="pl-11 flex flex-wrap items-center gap-2 mb-3">
           {lineAlertEnabled && (
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#00C300]/25 border border-[#00C300]/50 text-white text-[11px] font-semibold">
@@ -104,7 +89,6 @@ export default function NotificationBanner() {
           </div>
         </div>
 
-        {/* Actions row */}
         <div className="pl-11 flex items-center justify-between gap-2 pt-2 border-t border-white/10">
           {activeAlert.ticketId ? (
             <button

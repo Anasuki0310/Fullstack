@@ -1,19 +1,4 @@
-/**
- * @file SettingsPage.tsx
- * @description หน้าตั้งค่าระบบและโปรไฟล์ผู้ใช้งาน (User Profile & System Preferences Page)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. แท็บข้อมูลโปรไฟล์ (Tab: โปรไฟล์ผู้ใช้ / Profile Tab):
- *    - อัปโหลดหรือเปลี่ยนรูปภาพโปรไฟล์ (Custom Avatar Upload)
- *    - แก้ไขชื่อ-นามสกุล, รหัสนิสิต, คณะ, และสาขาวิชา พร้อมบันทึกลง AuthContext
- *    - ตรวจสอบสถานะการเชื่อมต่อบัญชี Google (Google Account Linked Badge)
- *    - ปุ่มรีเซ็ตข้อมูลโปรไฟล์กลับเป็นค่าเดิมของ Google (Reset to Google Profile)
- * 2. แท็บการตั้งค่าระบบ (Tab: การตั้งค่าและการแจ้งเตือน / Preferences Tab):
- *    - ตั้งค่าภาษาแสดงผลของระบบ (สลับระหว่าง ภาษาไทย 'th' และ English 'en')
- *    - สวิตช์เปิด-ปิดการแจ้งเตือนทางอีเมล (Email Notifications)
- *    - สวิตช์เปิด-ปิดการแจ้งเตือนทาง LINE (LINE Alerts)
- *    - ตั้งค่าธีมการแสดงผล (Light / Dark / System)
- */
+
 
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from './DashboardLayout';
@@ -45,23 +30,23 @@ function UserAvatar({ src, alt = 'User avatar', className = '' }: UserAvatarProp
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'preferences'>('profile');
-  
+
   const { language: globalLanguage, setLanguage: setGlobalLanguage } = useLanguage();
-  const { 
-    displayName, 
-    email, 
-    photoURL, 
+  const {
+    displayName,
+    email,
+    photoURL,
     studentId: authStudentId,
     faculty: authFaculty,
     major: authMajor,
-    isGoogleUser, 
-    signInWithGoogle, 
+    isGoogleUser,
+    signInWithGoogle,
     loading,
     updateUserProfile,
     resetProfileToGoogle
   } = useAuth();
 
-  // Profile Form States
+
   const [fullName, setFullName] = useState(displayName);
   const [studentId, setStudentId] = useState(authStudentId);
   const [faculty, setFaculty] = useState(authFaculty);
@@ -69,7 +54,7 @@ export default function SettingsPage() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Sync profile form states when auth data updates
+
   useEffect(() => {
     setFullName(displayName);
   }, [displayName]);
@@ -86,13 +71,13 @@ export default function SettingsPage() {
     setMajor(authMajor);
   }, [authMajor]);
 
-  // Settings States
+
   const [emailNotif, setEmailNotif] = useState(false);
   const [lineNotif, setLineNotif] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [localLanguage, setLocalLanguage] = useState<'en' | 'th'>(globalLanguage);
 
-  // Toast State
+
   const [toast, setToast] = useState<{ visible: boolean; title: string; description: string } | null>(null);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -119,8 +104,8 @@ export default function SettingsPage() {
       setToast({
         visible: true,
         title: globalLanguage === 'th' ? 'บันทึกข้อมูลสำเร็จ' : 'Profile Saved Successfully',
-        description: globalLanguage === 'th' 
-          ? `อัปเดตชื่อผู้ใช้เป็น "${fullName.trim()}" และบันทึกข้อมูลเรียบร้อยแล้ว` 
+        description: globalLanguage === 'th'
+          ? `อัปเดตชื่อผู้ใช้เป็น "${fullName.trim()}" และบันทึกข้อมูลเรียบร้อยแล้ว`
           : `Your name is now updated to "${fullName.trim()}".`,
       });
 
@@ -179,7 +164,7 @@ export default function SettingsPage() {
   const handleSavePreferences = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Apply Theme
+
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     if (theme === 'system') {
@@ -188,24 +173,24 @@ export default function SettingsPage() {
     } else {
       root.classList.add(theme);
     }
-    
-    // Apply Global Language
+
+
     setGlobalLanguage(localLanguage);
 
-    // Show Toast
+
     setToast({
       visible: true,
       title: localLanguage === 'th' ? 'บันทึกการตั้งค่าแล้ว' : 'Preferences Saved',
       description: localLanguage === 'th' ? 'อัปเดตการตั้งค่าลักษณะที่ปรากฏและภาษาแล้ว' : 'Your appearance and language settings have been updated.',
     });
 
-    // Hide toast after 3 seconds
+
     setTimeout(() => {
       setToast((prev) => (prev ? { ...prev, visible: false } : null));
     }, 3000);
   };
 
-  // Translations Map
+
   const t = {
     preferencesTab: globalLanguage === 'th' ? 'การตั้งค่าและกำหนดค่า' : 'Preferences & Settings',
     notifications: globalLanguage === 'th' ? 'การแจ้งเตือน' : 'Notifications',
@@ -217,14 +202,12 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
-        
-        {/* Page Header */}
+
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Account Settings</h2>
           <p className="text-sm text-slate-500 mt-1">Manage your profile information and preferences.</p>
         </div>
 
-        {/* Tabs */}
         <div className="border-b border-slate-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             <button
@@ -250,10 +233,8 @@ export default function SettingsPage() {
           </nav>
         </div>
 
-        {/* Tab Content: My Profile */}
         {activeTab === 'profile' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-300">
-            {/* Hidden file input for changing profile photo */}
             <input
               type="file"
               ref={photoInputRef}
@@ -264,18 +245,17 @@ export default function SettingsPage() {
 
             <form onSubmit={handleSaveProfile}>
 
-              {/* Profile Picture Section */}
               <div className="p-6 md:p-8 flex items-center gap-6 border-b border-slate-100">
                 <div className="relative">
                   <div className="w-24 h-24 rounded-full bg-slate-100 border-4 border-white shadow-sm overflow-hidden ring-2 ring-blue-100">
-                    <UserAvatar 
-                      src={photoURL} 
-                      alt={displayName} 
-                      className="w-full h-full object-cover" 
+                    <UserAvatar
+                      src={photoURL}
+                      alt={displayName}
+                      className="w-full h-full object-cover"
                     />
                   </div>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => photoInputRef.current?.click()}
                     title={globalLanguage === 'th' ? 'เปลี่ยนรูปโปรไฟล์' : 'Upload photo'}
                     className="absolute bottom-0 right-0 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:text-[#0A3D91] hover:border-[#0A3D91] transition-colors shadow-sm"
@@ -294,15 +274,15 @@ export default function SettingsPage() {
                   </div>
                   <p className="text-sm text-slate-500 mb-4">{email}</p>
                   <div className="flex items-center gap-3">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => photoInputRef.current?.click()}
                       className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
                     >
                       {globalLanguage === 'th' ? 'เปลี่ยนรูปภาพ' : 'Change Photo'}
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handleRemovePhoto}
                       className="px-4 py-2 bg-transparent text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors focus:outline-none"
                     >
@@ -312,7 +292,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Personal Information */}
               <div className="p-6 md:p-8 space-y-6 border-b border-slate-100">
                 <h3 className="text-base font-semibold text-slate-900">
                   {globalLanguage === 'th' ? 'ข้อมูลส่วนตัว' : 'Personal Information'}
@@ -362,7 +341,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Academic Information */}
               <div className="p-6 md:p-8 space-y-6">
                 <h3 className="text-base font-semibold text-slate-900">
                   {globalLanguage === 'th' ? 'ข้อมูลการศึกษา / สังกัด' : 'Academic Information'}
@@ -409,11 +387,10 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Form Actions */}
               <div className="p-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <p className="text-xs text-slate-500">
-                  {globalLanguage === 'th' 
-                    ? 'เมื่อกดบันทึก ชื่อใหม่จะถูกอัปเดตและแสดงผลทั่วทั้งระบบโดยอัตโนมัติ' 
+                  {globalLanguage === 'th'
+                    ? 'เมื่อกดบันทึก ชื่อใหม่จะถูกอัปเดตและแสดงผลทั่วทั้งระบบโดยอัตโนมัติ'
                     : 'Changes will immediately update your name in the dashboard, header, and tickets.'}
                 </p>
                 <button
@@ -439,24 +416,22 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Tab Content: Preferences & Settings */}
         {activeTab === 'preferences' && (
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden animate-in fade-in duration-300 relative">
             <form onSubmit={handleSavePreferences}>
-              
-              {/* Notifications */}
+
               <div className="p-6 md:p-8 space-y-6 border-b border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-2 mb-6 text-slate-900 dark:text-white">
                   <Bell className="w-5 h-5 text-slate-400" />
                   <h3 className="text-base font-semibold">{t.notifications}</h3>
                 </div>
-                
+
                 <div className="flex items-center justify-between py-2">
                   <div className="pr-4">
                     <p className="text-sm font-medium text-slate-900">Email Notifications</p>
                     <p className="text-sm text-slate-500">Receive updates about your tickets via email.</p>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     role="switch"
                     aria-checked={emailNotif}
@@ -478,7 +453,7 @@ export default function SettingsPage() {
                     </div>
                     <p className="text-sm text-slate-500 mt-1">Get real-time alerts on your LINE app.</p>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     role="switch"
                     aria-checked={lineNotif}
@@ -491,17 +466,16 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Appearance */}
               <div className="p-6 md:p-8 space-y-6 border-b border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-2 mb-6 text-slate-900 dark:text-white">
                   <Palette className="w-5 h-5 text-slate-400" />
                   <h3 className="text-base font-semibold">{t.appearance}</h3>
                 </div>
-                
+
                 <div className="max-w-md space-y-2">
                   <label htmlFor="theme" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Theme</label>
-                  <select 
-                    id="theme" 
+                  <select
+                    id="theme"
                     value={theme}
                     onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
                     className="flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0A3D91] transition-colors"
@@ -513,17 +487,16 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Language */}
               <div className="p-6 md:p-8 space-y-6">
                 <div className="flex items-center gap-2 mb-6 text-slate-900 dark:text-white">
                   <Globe className="w-5 h-5 text-slate-400" />
                   <h3 className="text-base font-semibold">{t.language}</h3>
                 </div>
-                
+
                 <div className="max-w-md space-y-2">
                   <label htmlFor="language" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Display Language</label>
-                  <select 
-                    id="language" 
+                  <select
+                    id="language"
                     value={localLanguage}
                     onChange={(e) => setLocalLanguage(e.target.value as 'en' | 'th')}
                     className="flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0A3D91] transition-colors"
@@ -534,7 +507,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Form Actions */}
               <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex justify-end">
                 <button
                   type="submit"
@@ -548,7 +520,6 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Global Toast Notification */}
         {toast && toast.visible && (
           <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg rounded-xl p-4 pr-12 flex items-start gap-3 relative max-w-sm">

@@ -1,10 +1,6 @@
-/**
- * @file googleAuth.ts
- * @description ระบบยืนยันตัวตนด้วย Google OAuth 2.0 (Google Identity Services - GIS)
- * ใช้ Client ID ที่สร้างจาก Google Cloud Console โดยตรง
- */
 
-export const GOOGLE_CLIENT_ID = 
+
+export const GOOGLE_CLIENT_ID =
   (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_GOOGLE_CLIENT_ID ||
   '919851798361-72lqg958mq6bjl6s91smtmlmotp51b9t.apps.googleusercontent.com';
 
@@ -18,7 +14,7 @@ export interface GoogleUserProfile {
   email_verified?: boolean;
 }
 
-/** โหลด Google Identity Services Script แบบไดนามิกหากยังไม่มี */
+
 export function loadGsiScript(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') return resolve();
@@ -44,21 +40,19 @@ export function loadGsiScript(): Promise<void> {
   });
 }
 
-/**
- * เรียกเปิด Google OAuth Popup เพื่อขอสิทธิ์เข้าสู่ระบบ
- */
+
 export async function triggerGoogleOAuth(clientId = GOOGLE_CLIENT_ID): Promise<GoogleUserProfile> {
   await loadGsiScript();
 
   return new Promise((resolve, reject) => {
-    const googleAny = (window as unknown as { 
-      google?: { 
-        accounts?: { 
-          oauth2?: { 
-            initTokenClient: (config: unknown) => { requestAccessToken: (opts?: unknown) => void } 
-          } 
-        } 
-      } 
+    const googleAny = (window as unknown as {
+      google?: {
+        accounts?: {
+          oauth2?: {
+            initTokenClient: (config: unknown) => { requestAccessToken: (opts?: unknown) => void }
+          }
+        }
+      }
     }).google;
 
     if (!googleAny?.accounts?.oauth2) {
@@ -82,7 +76,7 @@ export async function triggerGoogleOAuth(clientId = GOOGLE_CLIENT_ID): Promise<G
           }
 
           try {
-            // ดึงข้อมูลโปรไฟล์ผู้ใช้จาก Google UserInfo Endpoint
+
             const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
               headers: {
                 Authorization: `Bearer ${tokenResponse.access_token}`,

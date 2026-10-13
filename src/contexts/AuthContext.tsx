@@ -1,63 +1,53 @@
-/**
- * @file AuthContext.tsx
- * @description คอนเท็กซ์จัดการระบบความปลอดภัย บัญชีผู้ใช้ และการเข้าสู่ระบบ (Authentication & User State)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. ตรวจสอบและติดตามสถานะผู้ใช้งาน (Firebase Authentication & Google OAuth)
- * 2. จัดเก็บข้อมูลโปรไฟล์ผู้ใช้งาน เช่น ชื่อ, อีเมล, รหัสนิสิต, คณะ, สาขา, รูปโปรไฟล์
- * 3. รองรับการล็อกอินด้วย Google Account (signInWithGoogle) หรือโหมด Demo/Manual User (setManualUser)
- * 4. รองรับการแก้ไขข้อมูลโปรไฟล์ส่วนตัว (updateUserProfile) และรีเซ็ตกลับเป็นข้อมูลเดิมของ Google (resetProfileToGoogle)
- * 5. ตรวจสอบบทบาทเริ่มต้น เช่น หากอีเมลมีคำว่า 'admin' หรือเป็นอีเมลผู้ดูแล จะได้รับสิทธิ์ Admin อัตโนมัติ
- */
+
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { User, updateProfile as updateFirebaseProfile } from 'firebase/auth';
-import { 
-  googleSignIn, 
-  logoutUser, 
-  initAuth, 
+import {
+  googleSignIn,
+  logoutUser,
+  initAuth,
   fetchGoogleUserProfile,
   GoogleUserInfo,
-  getCachedAccessToken 
+  getCachedAccessToken
 } from '../lib/firebase';
 import { useRole } from './RoleContext';
-import { 
-  CMUUserInfo, 
-  getStoredCMUUser, 
-  storeCMUUser, 
-  isCMUStaff 
+import {
+  CMUUserInfo,
+  getStoredCMUUser,
+  storeCMUUser,
+  isCMUStaff
 } from '../lib/cmuOAuth';
 
-/** ข้อมูลโปรไฟล์เพิ่มเติมที่ผู้ใช้สามารถปรับแต่งเองได้ */
+
 export interface UserCustomData {
-  displayName?: string; // ชื่อที่แสดง
-  studentId?: string;   // รหัสนิสิต
-  faculty?: string;     // คณะ
-  major?: string;       // สาขาวิชา
-  photoURL?: string;    // ลิงก์รูปโปรไฟล์
+  displayName?: string;
+  studentId?: string;
+  faculty?: string;
+  major?: string;
+  photoURL?: string;
 }
 
 interface AuthContextType {
-  firebaseUser: User | null;          // ออบเจ็กต์ Firebase User ปัจจุบัน
-  googleProfile: GoogleUserInfo | null; // ข้อมูลโปรไฟล์จาก Google
-  cmuUser: CMUUserInfo | null;        // ข้อมูลโปรไฟล์จาก CMU OAuth
-  accessToken: string | null;         // Google / OAuth Access Token
-  displayName: string;                // ชื่อที่แสดงผล (คำนวณจาก Custom/CMU/Google/Manual)
-  email: string;                      // อีเมลผู้ใช้
-  photoURL: string;                   // URL รูปภาพโปรไฟล์
-  studentId: string;                  // รหัสนิสิต/นักศึกษา
-  faculty: string;                    // คณะ
-  major: string;                      // สาขา
-  isAuthenticated: boolean;           // สถานะว่าเข้าสู่ระบบแล้วหรือไม่
-  isGoogleUser: boolean;              // ล็อกอินผ่านบัญชี Google หรือไม่
-  isCmuUser: boolean;                 // ล็อกอินผ่านบัญชี CMU Account หรือไม่
-  loading: boolean;                   // กำลังโหลดสถานะล็อกอินหรือไม่
-  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>; // ฟังก์ชันเข้าสู่ระบบด้วย Google
-  signInWithCmu: (userInfo: CMUUserInfo) => void; // ฟังก์ชันเข้าสู่ระบบด้วย CMU Account
-  signOut: () => Promise<void>;       // ฟังก์ชันออกจากระบบ
-  setManualUser: (email: string, name?: string) => void; // ฟังก์ชันตั้งค่าผู้ใช้แบบ Manual / Demo
-  updateUserProfile: (data: Partial<UserCustomData>) => Promise<void>; // ฟังก์ชันแก้ไขข้อมูลโปรไฟล์
-  resetProfileToGoogle: () => void;   // ฟังก์ชันคืนค่าโปรไฟล์เป็นค่าเดิมของ Google
+  firebaseUser: User | null;
+  googleProfile: GoogleUserInfo | null;
+  cmuUser: CMUUserInfo | null;
+  accessToken: string | null;
+  displayName: string;
+  email: string;
+  photoURL: string;
+  studentId: string;
+  faculty: string;
+  major: string;
+  isAuthenticated: boolean;
+  isGoogleUser: boolean;
+  isCmuUser: boolean;
+  loading: boolean;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  signInWithCmu: (userInfo: CMUUserInfo) => void;
+  signOut: () => Promise<void>;
+  setManualUser: (email: string, name?: string) => void;
+  updateUserProfile: (data: Partial<UserCustomData>) => Promise<void>;
+  resetProfileToGoogle: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Custom profile data persisted in localStorage (e.g. customized name, student ID, etc.)
+
   const [customData, setCustomData] = useState<UserCustomData>(() => {
     try {
       const stored = localStorage.getItem('app_user_custom_data');
@@ -80,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Manual fallback user (e.g. standard email login or demo)
+
   const [manualUser, setManualUserInternal] = useState<{ email: string; name: string } | null>(() => {
     try {
       const stored = localStorage.getItem('app_manual_user');
@@ -99,8 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const profile = await fetchGoogleUserProfile(token);
           if (profile) setGoogleProfile(profile);
         } else {
-          // If logged in via Firebase Auth session without fresh access token in memory,
-          // user details are still available directly on Firebase User!
+
+
           setGoogleProfile({
             sub: user.uid,
             name: user.displayName || 'Google User',
@@ -109,8 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email_verified: user.emailVerified,
           });
         }
-        
-        // Auto-assign admin if email matches admin pattern, only if no role was saved
+
+
         const savedRole = localStorage.getItem('app_user_role');
         if (!savedRole) {
           if (user.email === 'bimcub12345@cmu.ac.th' || user.email?.includes('admin')) {
@@ -140,8 +130,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setFirebaseUser(res.user);
       setAccessToken(res.accessToken);
       setGoogleProfile(res.googleProfile);
-      
-      // Determine role based on email or admin privileges
+
+
       if (res.user.email === 'bimcub12345@cmu.ac.th' || res.user.email?.includes('admin')) {
         setRole('admin');
       } else {
@@ -162,16 +152,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  /** เข้าสู่ระบบด้วย CMU Account จาก CMU OAuth */
+
   const signInWithCmu = (userInfo: CMUUserInfo) => {
     setCmuUser(userInfo);
     storeCMUUser(userInfo);
 
-    // ปรับบทบาทตามประเภทบัญชี CMU (บุคลากร/Admin หรือ นักศึกษา)
+
     const isAdmin = isCMUStaff(userInfo);
     setRole(isAdmin ? 'admin' : 'student');
 
-    // อัปเดตข้อมูลโปรไฟล์พื้นฐานจาก CMU
+
     const fullNameTh = `${userInfo.prename_TH || ''}${userInfo.firstname_TH} ${userInfo.lastname_TH}`.trim();
     const fullNameEn = `${userInfo.prename_EN || ''} ${userInfo.firstname_EN} ${userInfo.lastname_EN}`.trim();
     const displayName = fullNameTh || fullNameEn || userInfo.cmuitaccount_name;
@@ -186,10 +176,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem('app_user_custom_data', JSON.stringify(newCustomData));
     } catch {
-      // ignore
+
     }
 
-    // ล้างบัญชีแบบ manual
+
     setManualUserInternal(null);
     localStorage.removeItem('app_manual_user');
   };
@@ -218,7 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem('app_manual_user', JSON.stringify(newUser));
     } catch {
-      // ignore
+
     }
   };
 
@@ -289,7 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (googleProfile?.picture) return googleProfile.picture;
     if (firebaseUser?.photoURL) return firebaseUser.photoURL;
-    // รูปอวตารมาตรฐานแบบไม่มีรูป (Default Silhouette)
+
 return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><rect width="128" height="128" fill="%23E2E8F0"/><circle cx="64" cy="46" r="24" fill="%2394A3B8"/><path d="M24 114c0-22 18-38 40-38s40 16 40 38" fill="%2394A3B8"/></svg>';
   }, [customData.photoURL, googleProfile, firebaseUser]);
 

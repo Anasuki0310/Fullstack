@@ -1,18 +1,4 @@
-/**
- * @file CameraCaptureModal.tsx
- * @description คอมโพเนนต์โมดัลเปิดกล้องถ่ายภาพความเสียหายจากอุปกรณ์ (Direct Device Camera Capture Modal)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. เชื่อมต่อกล้องของอุปกรณ์โดยตรงผ่าน Web MediaDevices API (`navigator.mediaDevices.getUserMedia`)
- * 2. รองรับการสลับกล้องหน้าและกล้องหลัง (`facingMode: 'environment' | 'user'`) เหมาะสำหรับสมาร์ทโฟน
- * 3. แสดง Live Video Stream บนหน้าจอพร้อมกรอบเล็งถ่ายภาพ (Viewfinder UI)
- * 4. ฟังก์ชันกดชัตเตอร์ถ่ายภาพ (Capture Snapshot):
- *    - วาดเฟรมปัจจุบันจาก `<video>` ลงบน `<canvas>` เพื่อแปลงเป็นไฟล์รูปภาพ JPEG (`image/jpeg`)
- *    - มีเอฟเฟกต์แฟลชขาวบนหน้าจอตอนกดชัตเตอร์ (Flash Animation)
- * 5. หน้าพรีวิวรูปภาพที่ถ่ายได้ พร้อมปุ่ม "ถ่ายใหม่" (Retake) และปุ่ม "ใช้รูปนี้" (Confirm)
- * 6. ระบบจัดการ Error ที่ครอบคลุม (เช่น ผู้ใช้ปฏิเสธสิทธิ์เข้าถึงกล้อง, ไม่พบอุปกรณ์กล้อง)
- * 7. เคลียร์ MediaStream Tracks อัตโนมัติเมื่อปิด Modal เพื่อไม่ให้กล้องเปิดค้าง
- */
+
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, RefreshCw, X, Check, RotateCcw, AlertCircle, SwitchCamera } from 'lucide-react';
@@ -112,7 +98,7 @@ export default function CameraCaptureModal({
     }
   }, [language, stopCamera]);
 
-  // Handle modal open / close
+
   useEffect(() => {
     if (isOpen) {
       setCapturedDataUrl(null);
@@ -137,7 +123,7 @@ export default function CameraCaptureModal({
   const handleCapture = () => {
     if (!videoRef.current || !isStreaming) return;
 
-    // Trigger flash animation
+
     setIsFlashing(true);
     setTimeout(() => setIsFlashing(false), 200);
 
@@ -149,7 +135,7 @@ export default function CameraCaptureModal({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // If front camera, mirror image for natural selfie feel
+
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
@@ -169,7 +155,7 @@ export default function CameraCaptureModal({
   const handleConfirm = () => {
     if (!capturedDataUrl) return;
 
-    // Convert dataUrl to blob then File
+
     fetch(capturedDataUrl)
       .then((res) => res.blob())
       .then((blob) => {
@@ -194,13 +180,12 @@ export default function CameraCaptureModal({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
     >
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        
-        {/* Header */}
+
         <div className="px-5 py-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between z-10 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">
@@ -239,18 +224,14 @@ export default function CameraCaptureModal({
           </div>
         </div>
 
-        {/* Viewfinder / Preview Area */}
         <div className="relative flex-1 bg-black flex items-center justify-center min-h-[300px] sm:min-h-[420px] overflow-hidden select-none">
-          
-          {/* Flash Effect */}
+
           {isFlashing && (
             <div className="absolute inset-0 bg-white z-40 animate-out fade-out duration-200 pointer-events-none" />
           )}
 
-          {/* Hidden Canvas for capture processing */}
           <canvas ref={canvasRef} className="hidden" />
 
-          {/* Error State */}
           {errorMsg ? (
             <div className="p-8 text-center max-w-md mx-auto space-y-4">
               <div className="w-14 h-14 mx-auto rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
@@ -281,7 +262,7 @@ export default function CameraCaptureModal({
               </div>
             </div>
           ) : isInitializing ? (
-            /* Loading / Starting Camera */
+
             <div className="flex flex-col items-center gap-3 text-slate-400">
               <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
               <p className="text-sm">
@@ -289,7 +270,7 @@ export default function CameraCaptureModal({
               </p>
             </div>
           ) : capturedDataUrl ? (
-            /* Captured Snapshot Preview */
+
             <div className="relative w-full h-full flex items-center justify-center bg-black">
               <img
                 src={capturedDataUrl}
@@ -302,7 +283,7 @@ export default function CameraCaptureModal({
               </div>
             </div>
           ) : (
-            /* Live Camera Feed */
+
             <div className="relative w-full h-full flex items-center justify-center">
               <video
                 ref={videoRef}
@@ -314,9 +295,7 @@ export default function CameraCaptureModal({
                 }`}
               />
 
-              {/* Viewfinder Target Framing Overlay */}
               <div className="absolute inset-8 sm:inset-12 pointer-events-none border border-white/20 rounded-xl flex items-center justify-center">
-                {/* Center crosshair */}
                 <div className="w-6 h-6 border-t border-l border-white/40 absolute top-2 left-2" />
                 <div className="w-6 h-6 border-t border-r border-white/40 absolute top-2 right-2" />
                 <div className="w-6 h-6 border-b border-l border-white/40 absolute bottom-2 left-2" />
@@ -324,7 +303,6 @@ export default function CameraCaptureModal({
                 <div className="w-2 h-2 rounded-full bg-white/40" />
               </div>
 
-              {/* Facing mode badge */}
               <div className="absolute bottom-4 left-4 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-md text-[11px] text-slate-300 border border-white/10">
                 {facingMode === 'environment'
                   ? (language === 'th' ? '📷 กล้องหลัง' : '📷 Rear Camera')
@@ -334,10 +312,9 @@ export default function CameraCaptureModal({
           )}
         </div>
 
-        {/* Footer Controls */}
         <div className="p-4 sm:p-5 bg-slate-900 border-t border-slate-800 flex items-center justify-between shrink-0">
           {capturedDataUrl ? (
-            /* Post-capture Action Buttons */
+
             <div className="w-full flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -358,7 +335,7 @@ export default function CameraCaptureModal({
               </button>
             </div>
           ) : (
-            /* Shutter Live Controls */
+
             <div className="w-full flex items-center justify-between">
               <button
                 type="button"
@@ -368,7 +345,6 @@ export default function CameraCaptureModal({
                 {language === 'th' ? 'ยกเลิก' : 'Cancel'}
               </button>
 
-              {/* Center Shutter Button */}
               <div className="flex-1 flex justify-center">
                 <button
                   type="button"

@@ -32,7 +32,7 @@ function cmuOAuthPlugin() {
               grant_type: 'authorization_code',
             });
 
-            // ส่งแลก token กับเซิร์ฟเวอร์ Authentik OAuth ของ CPE CMU (oauth497.cpecmu.com)
+
             const tokenRes = await fetch('https://oauth497.cpecmu.com/application/o/token/', {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -64,7 +64,7 @@ function cmuOAuthPlugin() {
               return;
             }
 
-            // ดึงข้อมูลโปรไฟล์ผู้ใช้จาก Authentik Userinfo Endpoint
+
             const userRes = await fetch('https://oauth497.cpecmu.com/application/o/userinfo/', {
               headers: { Authorization: `Bearer ${accessToken}` },
             });
@@ -74,7 +74,7 @@ function cmuOAuthPlugin() {
               rawUserData = await userRes.json();
             }
 
-            // จัดรูปแบบข้อมูลโปรไฟล์ให้สอดคล้องกับ CMUUserInfo
+
             const username = rawUserData.preferred_username || rawUserData.nickname || rawUserData.name || 'cmu.student';
             const email = rawUserData.email || `${username}@cmu.ac.th`;
             const nameParts = (rawUserData.name || '').split(' ');
@@ -134,10 +134,10 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+
+
       hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
+
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
   };

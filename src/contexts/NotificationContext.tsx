@@ -1,36 +1,23 @@
-/**
- * @file NotificationContext.tsx
- * @description คอนเท็กซ์จัดการระบบแจ้งเตือนส่วนกลาง (Notification Center & Audio Chimes)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. จัดการประวัติการแจ้งเตือนในศูนย์แจ้งเตือน (Notifications Bell Menu) พร้อมนับจำนวนที่ยังไม่ได้อ่าน (unreadCount)
- * 2. จัดการแบนเนอร์ป็อปอัปแจ้งเตือนงานด่วนลอยมุมจอ (Floating Alert Banner)
- * 3. ส่งเสียงแจ้งเตือนสังเคราะห์ผ่าน Web Audio API (playNotificationChime) โดยไม่ต้องพึ่งพาไฟล์เสียงภายนอก
- * 4. รองรับการแจ้งเตือนระดับบราวเซอร์ (Native HTML5 Browser Notifications)
- * 5. ฟังก์ชันแจ้งเตือนเฉพาะทาง:
- *    - notifyTicketCompleted: แจ้งเตือนเมื่อใบซ่อมเสร็จสมบูรณ์
- *    - notifyTicketStatusChange: แจ้งเตือนเมื่อสถานะเปลี่ยน
- *    - notifyTechnicianAssigned: แจ้งเตือนเมื่อมอบหมายงานให้ช่าง
- */
+
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { TicketItem } from './TicketContext';
 
-/** โครงสร้างข้อมูลประวัติการแจ้งเตือน */
+
 export interface NotificationItem {
-  id: string;               // รหัสการแจ้งเตือน
+  id: string;
   type: 'completed' | 'in_progress' | 'pending' | 'open' | 'assigned' | 'info' | 'line';
-  ticketId?: string;        // รหัสใบแจ้งซ่อมที่เกี่ยวข้อง
-  title: string;            // หัวข้อการแจ้งเตือน
-  message: string;          // ข้อความรายละเอียด
-  time: string;             // เวลาที่แสดงผล เช่น "10 นาทีที่แล้ว"
-  timestamp: number;        // เวลา timestamp
-  unread: boolean;          // ยังไม่ได้อ่านหรือไม่
-  reporterName?: string;    // ชื่อผู้แจ้ง
-  assignedTo?: string;      // ชื่อช่างที่รับผิดชอบ
+  ticketId?: string;
+  title: string;
+  message: string;
+  time: string;
+  timestamp: number;
+  unread: boolean;
+  reporterName?: string;
+  assignedTo?: string;
 }
 
-/** โครงสร้างข้อมูลแบนเนอร์แจ้งเตือนแบบป็อปอัปลอย (Floating Alert) */
+
 export interface FloatingAlert {
   id: string;
   title: string;
@@ -41,17 +28,17 @@ export interface FloatingAlert {
 }
 
 interface NotificationContextType {
-  notifications: NotificationItem[]; // ประวัติการแจ้งเตือนทั้งหมด
-  unreadCount: number;               // จำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
-  hasUnread: boolean;                // มีข้อความใหม่ที่ยังไม่ได้อ่านหรือไม่
-  activeAlert: FloatingAlert | null; // แบนเนอร์แจ้งเตือนที่กำลังลอยแสดงอยู่
-  lineAlertEnabled: boolean;         // เปิด/ปิดการแจ้งเตือนผ่าน LINE
+  notifications: NotificationItem[];
+  unreadCount: number;
+  hasUnread: boolean;
+  activeAlert: FloatingAlert | null;
+  lineAlertEnabled: boolean;
   setLineAlertEnabled: (enabled: boolean) => void;
-  dismissActiveAlert: () => void;    // ปิดแบนเนอร์แจ้งเตือนปัจจุบัน
-  markAsRead: (id: string) => void;  // ทำเครื่องหมายว่าอ่านแล้วตาม ID
-  markAllAsRead: () => void;         // ทำเครื่องหมายว่าอ่านแล้วทั้งหมด
-  removeNotification: (id: string) => void; // ลบการแจ้งเตือน
-  clearAll: () => void;              // ล้างการแจ้งเตือนทั้งหมด
+  dismissActiveAlert: () => void;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  removeNotification: (id: string) => void;
+  clearAll: () => void;
   addNotification: (item: {
     type: NotificationItem['type'];
     ticketId?: string;
@@ -59,11 +46,11 @@ interface NotificationContextType {
     message: string;
     reporterName?: string;
     assignedTo?: string;
-  }) => void;                        // เพิ่มการแจ้งเตือนใหม่
-  notifyTicketCompleted: (ticket: TicketItem, customMessage?: string) => void; // แจ้งเตือนงานซ่อมเสร็จสิ้น
-  notifyTicketStatusChange: (ticket: TicketItem, newStatus: string) => void;    // แจ้งเตือนสถานะเปลี่ยน
-  notifyTechnicianAssigned: (ticket: TicketItem, techName: string) => void;    // แจ้งเตือนมอบหมายช่าง
-  playNotificationChime: () => void; // เล่นเสียงแจ้งเตือนสังเคราะห์
+  }) => void;
+  notifyTicketCompleted: (ticket: TicketItem, customMessage?: string) => void;
+  notifyTicketStatusChange: (ticket: TicketItem, newStatus: string) => void;
+  notifyTechnicianAssigned: (ticket: TicketItem, techName: string) => void;
+  playNotificationChime: () => void;
 }
 
 const STORAGE_KEY = 'campusfix_notifications_v2';
@@ -101,7 +88,7 @@ const defaultNotifications: NotificationItem[] = [
   },
 ];
 
-// Web Audio API chime sound generator - works across all browsers
+
 export const playNotificationChime = () => {
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -112,7 +99,7 @@ export const playNotificationChime = () => {
     }
     const now = ctx.currentTime;
 
-    // First high chime note (D5)
+
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
@@ -124,7 +111,7 @@ export const playNotificationChime = () => {
     osc1.start(now);
     osc1.stop(now + 0.3);
 
-    // Second ascending sparkle chime note (A5)
+
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'sine';
@@ -136,7 +123,7 @@ export const playNotificationChime = () => {
     osc2.start(now + 0.1);
     osc2.stop(now + 0.55);
 
-    // Third pleasant harmonic chord tone (C#6)
+
     const osc3 = ctx.createOscillator();
     const gain3 = ctx.createGain();
     osc3.type = 'triangle';
@@ -152,7 +139,7 @@ export const playNotificationChime = () => {
   }
 };
 
-// Web Browser Notification API helper
+
 const triggerBrowserNotification = (title: string, body: string) => {
   if (typeof window === 'undefined' || !('Notification' in window)) return;
   try {
@@ -166,7 +153,7 @@ const triggerBrowserNotification = (title: string, body: string) => {
       });
     }
   } catch {
-    // Silently continue if blocked
+
   }
 };
 
@@ -221,7 +208,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [notifications]);
 
-  // Auto-dismiss floating alert after 5 seconds
+
   useEffect(() => {
     if (!activeAlert) return;
     const timer = setTimeout(() => {
@@ -276,7 +263,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setNotifications((prev) => [newItem, ...prev]);
   };
 
-  // Primary Action: When "Complete" (เสร็จสิ้น / Completed) is pressed
+
   const notifyTicketCompleted = (ticket: TicketItem, customMessage?: string) => {
     const ticketId = ticket.id;
     const issueName = ticket.issue || ticket.description || 'งานซ่อมบำรุง';
@@ -286,10 +273,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const title = `🎉 แจ้งเตือน: ซ่อมเสร็จสมบูรณ์แล้ว! #${ticketId}`;
     const message = customMessage || `คำร้อง #${ticketId} (${issueName}) ดำเนินการซ่อมเสร็จสิ้นเรียบร้อยแล้วโดย ${technician}`;
 
-    // 1. Play auditory chime
+
     playNotificationChime();
 
-    // 2. Add to notification center (Bell icon)
+
     addNotification({
       type: 'completed',
       ticketId,
@@ -299,13 +286,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       assignedTo: technician,
     });
 
-    // 3. Trigger Browser Native Notification
+
     triggerBrowserNotification(
       `CampusFix: งานซ่อม #${ticketId} เสร็จสิ้นแล้ว`,
       `${issueName} ได้รับการซ่อมเสร็จสมบูรณ์แล้วโดย ${technician}`
     );
 
-    // 4. Pop up high-visibility floating notification alert
+
     setActiveAlert({
       id: `alert-${Date.now()}`,
       title,
@@ -316,7 +303,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
   };
 
-  // Status Change Notification
+
   const notifyTicketStatusChange = (ticket: TicketItem, newStatus: string) => {
     if (newStatus === 'Completed') {
       notifyTicketCompleted(ticket);
@@ -347,7 +334,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
   };
 
-  // Technician Assigned Notification
+
   const notifyTechnicianAssigned = (ticket: TicketItem, techName: string) => {
     const ticketId = ticket.id;
     playNotificationChime();

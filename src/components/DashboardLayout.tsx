@@ -1,21 +1,4 @@
-/**
- * @file DashboardLayout.tsx
- * @description คอมโพเนนต์โครงสร้างหลักของแดชบอร์ด (Master Layout Component)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. กำหนด Sidebar เมนูด้านข้าง:
- *    - แสดงโลโก้ CampusFix และข้อมูลโปรไฟล์ผู้ใช้ (รูป, ชื่อ, บทบาท)
- *    - แสดงลิงก์เมนูตามบทบาท (Role-based Navigation):
- *      * โหมด Admin: หน้าหลัก (Dashboard), รายการแจ้งซ่อมทั้งหมด (All Tickets), จัดสรรช่างประจำตึก (Staff Allocation), แจ้งซ่อมใหม่, การตั้งค่า
- *      * โหมด Student: รายการแจ้งซ่อมของฉัน (My Tickets), แจ้งซ่อมใหม่, การตั้งค่า
- * 2. กำหนด Header ด้านบน:
- *    - ปุ่มเปิด-ปิด Sidebar บนมือถือ
- *    - กล่องค้นหา (Search)
- *    - สวิตช์สลับบทบาทด่วน (Quick Role Switcher): สลับระหว่าง Admin และ Student ได้ใน 1 คลิก
- *    - กระดิ่งแจ้งเตือน (Notifications Bell): แสดง Dropdown แจ้งเตือน พร้อมระบบมาร์กว่าอ่านแล้ว และเสียง chime
- *    - เมนูโปรไฟล์ผู้ใช้และปุ่มออกจากระบบ (Logout)
- * 3. ห่อหุ้ม `children` หน้าเพจเนื้อหาหลักให้อยู่ในโครงสร้าง responsive ที่สวยงาม
- */
+
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -23,21 +6,21 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useRole } from '../contexts/RoleContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications, NotificationItem } from '../contexts/NotificationContext';
-import { 
-  Building2, 
-  LayoutDashboard, 
-  Ticket, 
-  Settings, 
-  Search, 
-  Bell, 
-  Menu, 
-  X, 
-  LogOut, 
-  PlusCircle, 
-  MessageCircle, 
-  Wrench, 
-  CheckCircle2, 
-  Info, 
+import {
+  Building2,
+  LayoutDashboard,
+  Ticket,
+  Settings,
+  Search,
+  Bell,
+  Menu,
+  X,
+  LogOut,
+  PlusCircle,
+  MessageCircle,
+  Wrench,
+  CheckCircle2,
+  Info,
   User,
   Clock,
   UserCheck,
@@ -58,7 +41,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { language } = useLanguage();
   const { role, setRole } = useRole();
   const { displayName, email, photoURL, isGoogleUser, signOut } = useAuth();
-  
+
   const {
     notifications,
     unreadCount,
@@ -107,7 +90,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  // Role-based navigation items
+
   const navItems = role === 'student'
     ? [
         { name: language === 'th' ? 'รายการแจ้งซ่อมของฉัน' : 'My Tickets', path: '/tickets', icon: Ticket },
@@ -124,22 +107,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 overflow-hidden">
-      
-      {/* Mobile Sidebar Overlay */}
+
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/50 z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-[#0A3D91] dark:bg-slate-950 text-white transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} flex flex-col`}>
-        {/* Logo Area */}
         <div className="h-16 flex items-center px-6 border-b border-white/10 shrink-0">
           <Building2 className="h-8 w-8 text-white mr-3" />
           <span className="text-lg font-bold tracking-tight">CampusFix</span>
-          <button 
+          <button
             className="ml-auto lg:hidden text-white/70 hover:text-white"
             onClick={() => setSidebarOpen(false)}
           >
@@ -147,7 +127,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </button>
         </div>
 
-        {/* User Profile Snippet */}
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg overflow-hidden shadow-inner ring-2 ring-white/30 relative">
@@ -169,20 +148,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || (location.pathname.startsWith('/ticket') && item.path === '/tickets');
             const Icon = item.icon;
-            
+
             return (
-              <Link 
+              <Link
                 key={item.name}
-                to={item.path} 
+                to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center px-3 py-2.5 rounded-lg group transition-colors ${
-                  isActive 
-                    ? 'bg-white/10 dark:bg-slate-800 text-white' 
+                  isActive
+                    ? 'bg-white/10 dark:bg-slate-800 text-white'
                     : 'text-blue-100 dark:text-slate-300 hover:bg-white/5 dark:hover:bg-slate-800/50 hover:text-white'
                 }`}
               >
@@ -193,7 +171,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           })}
         </nav>
 
-        {/* LINE Notifications Toggle */}
         <div className="p-4 mt-auto">
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
             <div className="flex items-center justify-between mb-3">
@@ -203,7 +180,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
                 <span className="text-sm font-medium text-white">LINE Alerts</span>
               </div>
-              <button 
+              <button
                 type="button"
                 role="switch"
                 aria-checked={lineAlertEnabled}
@@ -224,13 +201,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </aside>
 
-      {/* Main Content Container */}
       <div className="flex-1 flex flex-col min-w-0">
-        
-        {/* Top Header */}
+
         <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-30 relative shrink-0 shadow-sm">
           <div className="flex items-center flex-1">
-            <button 
+            <button
               className="lg:hidden p-2 -ml-2 mr-2 text-slate-500 hover:text-slate-700 rounded-md"
               onClick={() => setSidebarOpen(true)}
             >
@@ -248,8 +223,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-3">
-            
-            {/* Quick Role Switcher Toggle */}
+
             <button
               type="button"
               onClick={() => {
@@ -274,9 +248,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </span>
             </button>
 
-            {/* Notifications Dropdown */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className="p-2 text-slate-400 hover:text-slate-500 relative transition-colors focus:outline-none"
                 title={language === 'th' ? `การแจ้งเตือน (${unreadCount} รายการใหม่)` : `Notifications (${unreadCount} unread)`}
@@ -291,16 +264,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {isNotificationsOpen && (
                 <>
-                  {/* Invisible overlay to close dropdown when clicking outside */}
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsNotificationsOpen(false)} 
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsNotificationsOpen(false)}
                   />
-                  
-                  {/* Popover Container */}
+
                   <div className="absolute right-0 mt-2 w-84 sm:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden flex flex-col origin-top-right animate-in fade-in zoom-in-95 duration-200">
-                    
-                    {/* Header */}
+
                     <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800">
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-slate-900 dark:text-white text-sm">
@@ -313,16 +283,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         )}
                       </div>
                       {hasUnread && (
-                        <button 
-                          onClick={markAllAsRead} 
+                        <button
+                          onClick={markAllAsRead}
                           className="text-xs text-[#0A3D91] hover:underline font-medium focus:outline-none"
                         >
                           {language === 'th' ? 'อ่านทั้งหมดแล้ว' : 'Mark all as read'}
                         </button>
                       )}
                     </div>
-                    
-                    {/* List */}
+
                     <div className="max-h-[360px] overflow-y-auto">
                       {notifications.length > 0 ? (
                         <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -330,8 +299,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             const { icon: Icon, color, bgColor } = getNotificationIcon(notification.type);
                             const url = getNotificationUrl(notification);
                             return (
-                              <Link 
-                                key={notification.id} 
+                              <Link
+                                key={notification.id}
                                 to={url}
                                 href={url}
                                 onClick={(e) => handleNotificationClick(e, notification.id, url)}
@@ -380,8 +349,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       )}
                     </div>
 
-                    {/* Footer */}
-                    <Link 
+                    <Link
                       to="/tickets"
                       onClick={() => setIsNotificationsOpen(false)}
                       className="p-3 border-t border-slate-100 dark:border-slate-700 text-center bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer group block"
@@ -395,9 +363,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               )}
             </div>
 
-            {/* Profile Dropdown */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="h-8 w-8 rounded-full bg-slate-200 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 transition-all hover:opacity-80 hover:ring-2 hover:ring-slate-300 hover:ring-offset-1 flex items-center justify-center overflow-hidden relative"
               >
@@ -409,16 +376,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {isProfileOpen && (
                 <>
-                  {/* Invisible overlay */}
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsProfileOpen(false)} 
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsProfileOpen(false)}
                   />
-                  
-                  {/* Dropdown Container */}
+
                   <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 z-50 overflow-hidden flex flex-col origin-top-right animate-in fade-in zoom-in-95 duration-200">
-                    
-                    {/* User Info Section */}
+
                     <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex flex-col bg-slate-50/50 dark:bg-slate-800/50">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-bold text-slate-900 dark:text-white text-sm tracking-tight truncate max-w-[190px]">
@@ -435,15 +399,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         {email}
                       </span>
                       <span className="mt-3 inline-flex items-center px-2 py-1 rounded border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/30 text-[#0A3D91] dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider w-fit">
-                        {role === 'admin' 
-                          ? (language === 'th' ? 'ผู้ดูแลระบบ กองอาคารสถานที่' : 'System Administrator, Campus Facilities') 
+                        {role === 'admin'
+                          ? (language === 'th' ? 'ผู้ดูแลระบบ กองอาคารสถานที่' : 'System Administrator, Campus Facilities')
                           : (language === 'th' ? 'นักศึกษา คณะวิศวกรรมศาสตร์' : 'Undergraduate Student, Faculty of Engineering')}
                       </span>
                     </div>
-                    
-                    {/* Menu Items */}
+
                     <div className="p-1.5">
-                      <Link 
+                      <Link
                         to="/settings"
                         onClick={() => setIsProfileOpen(false)}
                         className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
@@ -451,7 +414,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                         My Profile
                       </Link>
-                      <Link 
+                      <Link
                         to="/settings"
                         onClick={() => setIsProfileOpen(false)}
                         className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
@@ -460,10 +423,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         Settings
                       </Link>
                     </div>
-                    
-                    {/* Logout Action */}
+
                     <div className="p-1.5 border-t border-slate-100 dark:border-slate-700">
-                      <button 
+                      <button
                         onClick={async () => {
                           setIsProfileOpen(false);
                           await signOut();
@@ -483,7 +445,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
 
-        {/* Scrollable Main Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
           {children}
         </main>

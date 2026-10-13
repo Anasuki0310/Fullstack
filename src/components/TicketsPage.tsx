@@ -1,19 +1,4 @@
-/**
- * @file TicketsPage.tsx
- * @description หน้ารายการใบแจ้งซ่อมบำรุงทั้งหมด (Maintenance Tickets Management List)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. แสดงตารางรายการแจ้งซ่อมทั้งหมด ทั้งในมุมมองแอดมิน (All Tickets) และมุมมองนิสิต (My Tickets / Campus Tickets)
- * 2. ระบบกรองสถานะแบบแท็บ (Status Filter Tabs):
- *    - ทั้งหมด (All), รอดำเนินการ (Pending), กำลังซ่อม (In Progress), เสร็จสิ้น (Completed)
- *    - ซิงค์ค่าตัวกรองกับ URL Search Params (`?status=pending`) อัตโนมัติ
- * 3. ระบบจัดการงานของแอดมินโดยตรงจากตาราง (Inline Admin Actions):
- *    - ปรับเปอร์เซ็นต์ความคืบหน้า (Progress Bar Slider 0-100%) พร้อมบันทึกทันที
- *    - เปลี่ยนสถานะงาน (Status Dropdown) พร้อมส่งเสียงและป็อปอัปแจ้งเตือน
- *    - มอบหมายช่าง (Assign Technician Dropdown)
- *    - ลบใบแจ้งซ่อม (Delete Ticket Modal พร้อมยืนยัน)
- * 4. นำทางเข้าสู่หน้ารายละเอียดเมื่อคลิกรายการตั๋ว (`/ticket/:id`)
- */
+
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -24,22 +9,22 @@ import { useTickets, TicketItem } from '../contexts/TicketContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useBuildingStaff } from '../contexts/BuildingStaffContext';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Plus, 
-  ChevronRight, 
-  User, 
-  ListFilter, 
-  Clock, 
-  Wrench, 
-  CheckCircle2, 
-  AlertCircle, 
-  UserCheck, 
-  Bell, 
-  Trash2, 
-  AlertTriangle, 
-  Building2, 
-  Sliders, 
-  Users 
+import {
+  Plus,
+  ChevronRight,
+  User,
+  ListFilter,
+  Clock,
+  Wrench,
+  CheckCircle2,
+  AlertCircle,
+  UserCheck,
+  Bell,
+  Trash2,
+  AlertTriangle,
+  Building2,
+  Sliders,
+  Users
 } from 'lucide-react';
 
 export default function TicketsPage() {
@@ -55,10 +40,10 @@ export default function TicketsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [studentViewScope, setStudentViewScope] = useState<'my' | 'all'>('my');
 
-  // Modal State for Ticket Deletion
+
   const [ticketToDelete, setTicketToDelete] = useState<TicketItem | null>(null);
 
-  // Close modal on Escape key press
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -69,7 +54,7 @@ export default function TicketsPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Synchronize state with URL search parameters on mount or when params change
+
   useEffect(() => {
     const statusParam = searchParams.get('status');
     if (statusParam) {
@@ -183,7 +168,7 @@ export default function TicketsPage() {
   ], [statusCounts]);
 
   const filteredTickets = useMemo(() => {
-    // Sort so the newest is at the top
+
     const sorted = [...baseTickets].sort((a, b) => {
       const timeA = a.createdAt || (a.submittedDate ? new Date(a.submittedDate).getTime() : 0) || (a.date ? new Date(a.date).getTime() : 0) || 0;
       const timeB = b.createdAt || (b.submittedDate ? new Date(b.submittedDate).getTime() : 0) || (b.date ? new Date(b.date).getTime() : 0) || 0;
@@ -191,7 +176,7 @@ export default function TicketsPage() {
     });
 
     return sorted.filter(ticket => {
-      // Status filter
+
       if (statusFilter !== 'all') {
         const s = ticket.status.toLowerCase();
         if (statusFilter === 'open' && s !== 'open') return false;
@@ -233,13 +218,13 @@ export default function TicketsPage() {
     }
   };
 
-  // Confirm delete ticket handler
+
   const handleConfirmDelete = () => {
     if (!ticketToDelete) return;
     deleteTicket(ticketToDelete.id);
     toast({
       title: language === 'th' ? 'ลบคำร้องสำเร็จ' : 'Ticket Deleted',
-      description: language === 'th' 
+      description: language === 'th'
         ? `ลบคำร้อง #${ticketToDelete.id} ออกจากระบบเรียบร้อยแล้ว`
         : `Ticket #${ticketToDelete.id} has been permanently deleted.`,
     });
@@ -249,8 +234,7 @@ export default function TicketsPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Page Header */}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
@@ -273,9 +257,8 @@ export default function TicketsPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Admin: Staff Allocation quick link */}
             {role === 'admin' && (
-              <Link 
+              <Link
                 to="/building-staff"
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all shadow-2xs"
               >
@@ -284,8 +267,8 @@ export default function TicketsPage() {
               </Link>
             )}
 
-            <Link 
-              to="/submit-request" 
+            <Link
+              to="/submit-request"
               className="inline-flex items-center justify-center space-x-2 bg-[#0A3D91] hover:bg-blue-900 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-xs"
             >
               <Plus className="w-4 h-4" />
@@ -294,7 +277,6 @@ export default function TicketsPage() {
           </div>
         </div>
 
-        {/* Status Category Filter Tabs Bar */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-2 sm:p-2.5 flex items-center justify-between overflow-x-auto gap-2">
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-max">
             {statusCategories.map((cat) => {
@@ -314,8 +296,8 @@ export default function TicketsPage() {
                   <Icon className="w-3.5 h-3.5" />
                   <span>{language === 'th' ? cat.labelTh : cat.labelEn}</span>
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                    isActive 
-                      ? 'bg-white/20 text-white' 
+                    isActive
+                      ? 'bg-white/20 text-white'
                       : 'bg-slate-100 text-slate-600'
                   }`}>
                     {cat.count}
@@ -335,9 +317,7 @@ export default function TicketsPage() {
           )}
         </div>
 
-        {/* Data Table Container */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
-          {/* Data Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -356,13 +336,13 @@ export default function TicketsPage() {
               <tbody className="divide-y divide-slate-100 text-sm">
                 {filteredTickets.length > 0 ? (
                   filteredTickets.map((ticket) => {
-                    const currentProgress = ticket.progress !== undefined 
-                      ? ticket.progress 
+                    const currentProgress = ticket.progress !== undefined
+                      ? ticket.progress
                       : (ticket.status === 'Completed' ? 100 : ticket.status === 'In Progress' ? 50 : 25);
 
                     return (
-                      <tr 
-                        key={ticket.id} 
+                      <tr
+                        key={ticket.id}
                         className="hover:bg-slate-50 transition-colors cursor-pointer group"
                         onClick={() => navigate(`/ticket/${ticket.id}`)}
                       >
@@ -393,7 +373,7 @@ export default function TicketsPage() {
                                 value={ticket.assignedTo || 'Unassigned'}
                                 onChange={(e) => {
                                   const newTech = e.target.value;
-                                  updateTicket(ticket.id, { 
+                                  updateTicket(ticket.id, {
                                     assignedTo: newTech,
                                     ...(newTech !== 'Unassigned' && (ticket.status === 'Open' || ticket.status === 'Pending') ? { status: 'In Progress' } : {})
                                   });
@@ -413,7 +393,7 @@ export default function TicketsPage() {
                               </select>
                             </div>
                           ) : (
-                            /* Student View: Read-Only */
+
                             <div className="text-xs">
                               {ticket.assignedTo && ticket.assignedTo !== 'Unassigned' ? (
                                 <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
@@ -430,7 +410,6 @@ export default function TicketsPage() {
                           )}
                         </td>
 
-                        {/* Progress Column: Admin can click & adjust progress % directly */}
                         <td className="p-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           {role === 'admin' ? (
                             <div className="space-y-1 w-28">
@@ -456,7 +435,7 @@ export default function TicketsPage() {
                                 </select>
                               </div>
                               <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                <div 
+                                <div
                                   className={`h-full rounded-full transition-all duration-300 ${
                                     currentProgress === 100 ? 'bg-emerald-500' : currentProgress >= 50 ? 'bg-blue-600' : 'bg-amber-500'
                                   }`}
@@ -468,7 +447,7 @@ export default function TicketsPage() {
                             <div className="space-y-1 w-24">
                               <span className="text-xs font-bold text-slate-700">{currentProgress}%</span>
                               <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                <div 
+                                <div
                                   className={`h-full rounded-full ${
                                     currentProgress === 100 ? 'bg-emerald-500' : 'bg-[#0A3D91]'
                                   }`}
@@ -479,7 +458,6 @@ export default function TicketsPage() {
                           )}
                         </td>
 
-                        {/* Status Column */}
                         <td className="p-4 whitespace-nowrap">
                           {role === 'admin' ? (
                             <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -504,7 +482,6 @@ export default function TicketsPage() {
                                 </select>
                               </div>
 
-                              {/* Quick Complete Button for tickets not yet completed */}
                               {ticket.status !== 'Completed' && (
                                 <button
                                   type="button"
@@ -522,18 +499,16 @@ export default function TicketsPage() {
                               )}
                             </div>
                           ) : (
-                            /* Student View: Read-Only Badge */
+
                             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getStatusBadge(ticket.status)}`}>
                               {ticket.status}
                             </span>
                           )}
                         </td>
 
-                        {/* Action Column */}
                         <td className="p-4 pr-6 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                            
-                            {/* Admin Delete Action Button */}
+
                             {role === 'admin' && (
                               <button
                                 type="button"
@@ -545,7 +520,7 @@ export default function TicketsPage() {
                               </button>
                             )}
 
-                            <button 
+                            <button
                               className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-[#0A3D91] hover:bg-blue-50 rounded-lg transition-colors focus:outline-none"
                               onClick={() => navigate(`/ticket/${ticket.id}`)}
                             >
@@ -566,8 +541,8 @@ export default function TicketsPage() {
                         </div>
                         <p className="font-semibold text-slate-800 text-base mb-1">
                           {statusFilter !== 'all'
-                            ? (language === 'th' 
-                                ? `ไม่พบรายการในสถานะ "${statusCategories.find(c => c.id === statusFilter)?.labelTh || statusFilter}"` 
+                            ? (language === 'th'
+                                ? `ไม่พบรายการในสถานะ "${statusCategories.find(c => c.id === statusFilter)?.labelTh || statusFilter}"`
                                 : `No "${statusCategories.find(c => c.id === statusFilter)?.labelEn || statusFilter}" requests found`)
                             : (language === 'th' ? 'ไม่พบรายการที่ตรงกับตัวกรอง' : 'No tickets found')}
                         </p>
@@ -594,10 +569,9 @@ export default function TicketsPage() {
             </table>
           </div>
 
-          {/* Pagination */}
           <div className="p-4 border-t border-slate-200 bg-slate-50/50 rounded-b-xl flex items-center justify-between sm:justify-end">
             <span className="text-sm text-slate-500 mr-4">
-              {language === 'th' 
+              {language === 'th'
                 ? `แสดง ${filteredTickets.length > 0 ? 1 : 0} ถึง ${filteredTickets.length} จากทั้งหมด ${filteredTickets.length} รายการ`
                 : `Showing ${filteredTickets.length > 0 ? 1 : 0} to ${filteredTickets.length} of ${filteredTickets.length} results`}
             </span>
@@ -616,9 +590,8 @@ export default function TicketsPage() {
 
         </div>
 
-        {/* Modal: Delete Ticket Confirmation */}
         {ticketToDelete && (
-          <div 
+          <div
             onClick={(e) => { if (e.target === e.currentTarget) setTicketToDelete(null); }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
           >
@@ -632,7 +605,7 @@ export default function TicketsPage() {
                     {language === 'th' ? 'ยืนยันการลบคำร้องแจ้งซ่อม?' : 'Delete Maintenance Ticket?'}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    {language === 'th' 
+                    {language === 'th'
                       ? `คุณกำลังจะลบคำร้อง #${ticketToDelete.id} "${ticketToDelete.issue}" ออกจากระบบถาวร การกระทำนี้ไม่สามารถยกเลิกได้`
                       : `Are you sure you want to permanently delete ticket #${ticketToDelete.id} "${ticketToDelete.issue}"? This action cannot be undone.`}
                   </p>

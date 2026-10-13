@@ -1,41 +1,19 @@
-/**
- * @file BuildingStaffPage.tsx
- * @description หน้าระบบจัดการช่างซ่อมบำรุงและการจัดสรรบุคลากรประจำแต่ละอาคาร (Building Staff Allocation & Technician Management)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. แสดงและจัดการข้อมูลการจัดสรรช่างประจำอาคาร (Tab: อาคารและโซนรับผิดชอบ / Buildings Tab):
- *    - กรองตามโซนมหาวิทยาลัย (North, Central, South, Engineering) หรือค้นหาชื่อตึก
- *    - แสดงหัวหน้าช่างหลัก (Lead Tech) พร้อมเบอร์โทร และช่างสนับสนุน (Support Techs)
- *    - แสดงจำนวนงานซ่อมที่ค้างอยู่จริงในแต่ละตึก
- * 2. แสดงและจัดการทีมช่างทั้งหมด (Tab: ช่างซ่อมบำรุงทั้งหมด / Technicians Tab):
- *    - แสดงการ์ดข้อมูลช่าง, ความเชี่ยวชาญ, เบอร์โทร, อีเมล, สถานะ (พร้อมปฏิบัติงาน / ลางาน / กำลังซ่อม)
- *    - แสดงรายชื่ออาคารที่ช่างคนนี้รับผิดชอบอยู่
- * 3. ระบบเพิ่มช่างใหม่ (Modal 1: Add New Technician Modal):
- *    - กรอกชื่อ, เบอร์โทร, อีเมล, เลือกรูปภาพโปรไฟล์, เลือกตำแหน่งและความเชี่ยวชาญ
- *    - มีตัวเลือก "มาแทนที่ช่างเดิม": โอนย้ายงานทุกตึกของช่างเดิมให้ช่างคนใหม่ทันที
- * 4. ระบบเปลี่ยนตัวช่างแบบ 1-Click (Modal 2: 1-Click Replace Technician Modal):
- *    - โอนย้ายงานทุกอาคารของช่างคนหนึ่งไปยังช่างอีกคนโดยอัตโนมัติ
- * 5. ระบบยืนยันลบช่าง (Modal 3: Delete Technician Modal):
- *    - เลือกว่าจะโอนย้ายงานให้อีกคน หรือปรับสถานะเป็นว่าง (Unassigned)
- * 6. ระบบแก้ไขการจัดสรรช่างประจำอาคาร (Modal 4: Edit Building Allocation Modal):
- *    - เลือกหัวหน้าช่างและช่างสนับสนุนประจำตึก พร้อมบันทึกหมายเหตุระบบประจำตึก
- * 7. รองรับการกดปุ่ม Escape และคลิกพื้นที่ภายนอก (Backdrop Click) เพื่อปิด Modal ทุกตัวอย่างราบรื่น
- */
+
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Building2, 
-  Users, 
-  UserCheck, 
+import {
+  Building2,
+  Users,
+  UserCheck,
   UserPlus,
-  Phone, 
-  Mail, 
-  Search, 
-  Filter, 
-  Edit3, 
-  CheckCircle2, 
-  Clock, 
-  Wrench, 
+  Phone,
+  Mail,
+  Search,
+  Filter,
+  Edit3,
+  CheckCircle2,
+  Clock,
+  Wrench,
   AlertCircle,
   ShieldCheck,
   Plus,
@@ -72,28 +50,28 @@ export default function BuildingStaffPage() {
   const { role } = useRole();
   const { toast } = useToast();
   const { tickets } = useTickets();
-  const { 
-    allocations, 
-    technicians, 
-    updateAllocation, 
+  const {
+    allocations,
+    technicians,
+    updateAllocation,
     addTechnician,
     updateTechnician,
     deleteTechnician,
     replaceTechnician,
-    resetToDefaults 
+    resetToDefaults
   } = useBuildingStaff();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedZone, setSelectedZone] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'buildings' | 'technicians'>('buildings');
 
-  // Modal State for Editing Allocation
+
   const [editingBuilding, setEditingBuilding] = useState<BuildingAllocation | null>(null);
   const [selectedLeadTech, setSelectedLeadTech] = useState<string>('');
   const [selectedSupportTechs, setSelectedSupportTechs] = useState<string[]>([]);
   const [buildingNotes, setBuildingNotes] = useState<string>('');
 
-  // Modal State for Adding New Technician
+
   const [isAddTechModalOpen, setIsAddTechModalOpen] = useState(false);
   const [techFullName, setTechFullName] = useState('');
   const [techSpecialty, setTechSpecialty] = useState('Electrical');
@@ -106,11 +84,11 @@ export default function BuildingStaffPage() {
   const [isReplacement, setIsReplacement] = useState(false);
   const [replacesTechName, setReplacesTechName] = useState('');
 
-  // Modal State for 1-Click Replace Existing Technician
+
   const [replacingTech, setReplacingTech] = useState<TechnicianProfile | null>(null);
   const [replacementTargetName, setReplacementTargetName] = useState<string>('');
 
-  // Modal State for Delete Technician
+
   const [techToDelete, setTechToDelete] = useState<TechnicianProfile | null>(null);
   const [deleteReplacementName, setDeleteReplacementName] = useState<string>('');
 
@@ -125,7 +103,7 @@ export default function BuildingStaffPage() {
     setEditingBuilding(null);
   };
 
-  // Close modals on Escape key press
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -152,7 +130,7 @@ export default function BuildingStaffPage() {
 
     toast({
       title: language === 'th' ? 'บันทึกการจัดสรรสำเร็จ' : 'Allocation Updated',
-      description: language === 'th' 
+      description: language === 'th'
         ? `อัปเดตช่างผู้รับผิดชอบสำหรับ "${editingBuilding.nameTh}" เรียบร้อยแล้ว`
         : `Staff allocation for "${editingBuilding.nameEn}" has been successfully updated.`,
     });
@@ -161,7 +139,7 @@ export default function BuildingStaffPage() {
   };
 
   const toggleSupportTech = (techName: string) => {
-    if (techName === selectedLeadTech) return; // Lead tech cannot be support tech at same time
+    if (techName === selectedLeadTech) return;
     if (selectedSupportTechs.includes(techName)) {
       setSelectedSupportTechs(selectedSupportTechs.filter(t => t !== techName));
     } else {
@@ -169,7 +147,7 @@ export default function BuildingStaffPage() {
     }
   };
 
-  // Preset role labels when specialty changes
+
   const handleSpecialtyChange = (spec: string) => {
     setTechSpecialty(spec);
     switch (spec) {
@@ -204,12 +182,12 @@ export default function BuildingStaffPage() {
     }
   };
 
-  // Submit Handler: Add New Technician
+
   const handleCreateTechnician = (e: React.FormEvent) => {
     e.preventDefault();
     if (!techFullName.trim()) return;
 
-    // Format display name: e.g., "Somchai K. (Electrician)"
+
     let displayName = techFullName.trim();
     if (!displayName.includes('(')) {
       displayName = `${displayName} (${techSpecialty})`;
@@ -232,7 +210,7 @@ export default function BuildingStaffPage() {
     toast({
       title: language === 'th' ? '🎉 เพิ่มช่างคนใหม่สำเร็จ!' : 'Technician Added!',
       description: isReplacement && replacesTechName
-        ? (language === 'th' 
+        ? (language === 'th'
             ? `เพิ่ม "${created.name}" และโอนย้ายงานตึกจาก "${replacesTechName}" เรียบร้อยแล้ว`
             : `Added "${created.name}" and transferred building roles from "${replacesTechName}".`)
         : (language === 'th'
@@ -240,7 +218,7 @@ export default function BuildingStaffPage() {
             : `Added "${created.name}" to the technician roster.`),
     });
 
-    // Reset Form & Close
+
     setTechFullName('');
     setTechPhone('');
     setTechEmail('');
@@ -249,7 +227,7 @@ export default function BuildingStaffPage() {
     setIsAddTechModalOpen(false);
   };
 
-  // Handler: Replace Technician Assignments
+
   const handleConfirmReplace = (e: React.FormEvent) => {
     e.preventDefault();
     if (!replacingTech || !replacementTargetName) return;
@@ -267,12 +245,12 @@ export default function BuildingStaffPage() {
     setReplacementTargetName('');
   };
 
-  // Handler: Delete Technician
+
   const handleConfirmDelete = () => {
     if (!techToDelete) return;
 
     deleteTechnician(
-      techToDelete.id, 
+      techToDelete.id,
       deleteReplacementName && deleteReplacementName !== 'none' ? deleteReplacementName : undefined
     );
 
@@ -291,7 +269,7 @@ export default function BuildingStaffPage() {
     setDeleteReplacementName('');
   };
 
-  // Filtered allocations
+
   const filteredAllocations = allocations.filter(b => {
     if (selectedZone !== 'all' && b.zone !== selectedZone) return false;
     if (searchQuery.trim()) {
@@ -304,7 +282,7 @@ export default function BuildingStaffPage() {
     return true;
   });
 
-  // Filtered technicians
+
   const filteredTechnicians = technicians.filter(t => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -319,7 +297,7 @@ export default function BuildingStaffPage() {
     return true;
   });
 
-  // Calculate ticket counts per building
+
   const getTicketCountForBuilding = (bldgName: string) => {
     const clean = bldgName.toLowerCase();
     return tickets.filter(t => {
@@ -348,11 +326,10 @@ export default function BuildingStaffPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Header Banner */}
+
         <div className="bg-linear-to-r from-[#0A3D91] via-blue-900 to-indigo-900 rounded-2xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          
+
           <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 text-blue-100 border border-white/20">
@@ -363,13 +340,12 @@ export default function BuildingStaffPage() {
                 {language === 'th' ? 'การจัดสรรพนักงานและระบบจัดการช่าง' : 'Building Staff Allocation & Technicians'}
               </h1>
               <p className="text-blue-100/90 text-sm max-w-2xl leading-relaxed">
-                {language === 'th' 
-                  ? 'มอบหมายและจัดสรรทีมช่างประจำแต่ละอาคาร เพิ่มช่างคนใหม่ หรือโอนย้ายช่างมาแทนที่เมื่อมีการเปลี่ยนบุคลากร' 
+                {language === 'th'
+                  ? 'มอบหมายและจัดสรรทีมช่างประจำแต่ละอาคาร เพิ่มช่างคนใหม่ หรือโอนย้ายช่างมาแทนที่เมื่อมีการเปลี่ยนบุคลากร'
                   : 'Assign primary and support technicians to campus buildings, add new technicians, or transfer building duties to replacement staff.'}
               </p>
             </div>
 
-            {/* Quick Summary Stats & Add Button */}
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <div className="bg-white/15 rounded-xl p-3 px-4 border border-white/20 text-center shadow-xs">
                 <span className="block text-2xl font-bold">{allocations.length}</span>
@@ -380,7 +356,6 @@ export default function BuildingStaffPage() {
                 <span className="text-[11px] text-blue-200">{language === 'th' ? 'ช่างในระบบ' : 'Technicians'}</span>
               </div>
 
-              {/* Prominent Add Technician Button */}
               {role === 'admin' && (
                 <button
                   type="button"
@@ -395,7 +370,6 @@ export default function BuildingStaffPage() {
           </div>
         </div>
 
-        {/* Tab & Filter Bar */}
         <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
             <button
@@ -423,7 +397,6 @@ export default function BuildingStaffPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {/* Search Input */}
             <div className="relative min-w-55">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -435,7 +408,6 @@ export default function BuildingStaffPage() {
               />
             </div>
 
-            {/* Zone Filter (Only on buildings tab) */}
             {activeTab === 'buildings' ? (
               <div className="flex items-center gap-1">
                 <Filter className="w-3.5 h-3.5 text-slate-400" />
@@ -452,7 +424,7 @@ export default function BuildingStaffPage() {
                 </select>
               </div>
             ) : (
-              /* Add Tech Shortcut on Tech Tab */
+
               role === 'admin' && (
                 <button
                   type="button"
@@ -467,7 +439,6 @@ export default function BuildingStaffPage() {
           </div>
         </div>
 
-        {/* Tab Content 1: Buildings & Staff Allocation Cards */}
         {activeTab === 'buildings' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredAllocations.map((building) => {
@@ -480,7 +451,6 @@ export default function BuildingStaffPage() {
                   key={building.id}
                   className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
                 >
-                  {/* Top Zone Indicator Bar */}
                   <div className={`h-1.5 w-full absolute top-0 left-0 ${
                     building.zone === 'Engineering Zone' ? 'bg-blue-600' :
                     building.zone === 'North Campus' ? 'bg-emerald-500' :
@@ -488,7 +458,6 @@ export default function BuildingStaffPage() {
                   }`} />
 
                   <div className="space-y-4">
-                    {/* Building Name & Zone Badge */}
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5 mb-1">
@@ -518,7 +487,6 @@ export default function BuildingStaffPage() {
                       </button>
                     </div>
 
-                    {/* Primary Lead Technician Card */}
                     <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-xs bg-blue-200">
                         {leadTech?.avatar ? (
@@ -547,7 +515,6 @@ export default function BuildingStaffPage() {
                       </div>
                     </div>
 
-                    {/* Support Technicians */}
                     <div className="space-y-1.5">
                       <span className="text-[11px] font-semibold text-slate-500 block">
                         {language === 'th' ? 'ทีมช่างสนับสนุนประจำพื้นที่:' : 'Support Technicians:'}
@@ -571,7 +538,6 @@ export default function BuildingStaffPage() {
                       </div>
                     </div>
 
-                    {/* Facility Notes */}
                     {building.notes && (
                       <div className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 flex items-start gap-1.5">
                         <Info className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
@@ -580,7 +546,6 @@ export default function BuildingStaffPage() {
                     )}
                   </div>
 
-                  {/* Card Footer Actions */}
                   <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                     <span className="text-[11px]">
                       {language === 'th' ? 'สถิติคำร้องสะสม:' : 'Total Tickets:'} <b>{totalTicketsCount}</b>
@@ -599,11 +564,9 @@ export default function BuildingStaffPage() {
           </div>
         )}
 
-        {/* Tab Content 2: Full Technician Directory & Management */}
         {activeTab === 'technicians' && (
           <div className="space-y-4">
-            
-            {/* Top Subheader for Tech Tab */}
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div className="text-xs text-slate-600">
                 <span className="font-bold text-slate-900 block sm:inline">
@@ -611,8 +574,8 @@ export default function BuildingStaffPage() {
                 </span>
                 <span className="hidden sm:inline mx-1.5">|</span>
                 <span>
-                  {language === 'th' 
-                    ? 'คุณสามารถเพิ่มช่างคนใหม่ โอนย้ายความรับผิดชอบ หรือเปลี่ยนช่างมาแทนที่ได้ที่นี่' 
+                  {language === 'th'
+                    ? 'คุณสามารถเพิ่มช่างคนใหม่ โอนย้ายความรับผิดชอบ หรือเปลี่ยนช่างมาแทนที่ได้ที่นี่'
                     : 'Add new technicians or reassign duties to replacements.'}
                 </span>
               </div>
@@ -642,8 +605,7 @@ export default function BuildingStaffPage() {
                     className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
                   >
                     <div className="space-y-4">
-                      
-                      {/* Top Row: Avatar & Status & Actions */}
+
                       <div className="flex items-start gap-3.5">
                         <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-blue-100 shadow-xs bg-slate-100">
                           <img src={tech.avatar} alt={tech.name} className="w-full h-full object-cover" />
@@ -651,7 +613,7 @@ export default function BuildingStaffPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-1">
                             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                              tech.status === 'active' 
+                              tech.status === 'active'
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : tech.status === 'busy'
                                 ? 'bg-amber-50 text-amber-700 border-amber-200'
@@ -663,7 +625,6 @@ export default function BuildingStaffPage() {
                               {tech.status === 'active' ? (language === 'th' ? 'พร้อมงาน' : 'Active') : tech.status === 'busy' ? (language === 'th' ? 'ติดงาน' : 'Busy') : (language === 'th' ? 'ลาพัก' : 'Leave')}
                             </span>
 
-                            {/* Admin Quick Action Controls */}
                             {role === 'admin' && (
                               <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                                 <button
@@ -701,7 +662,6 @@ export default function BuildingStaffPage() {
                         </div>
                       </div>
 
-                      {/* Contact Info */}
                       <div className="bg-slate-50 rounded-xl p-2.5 text-xs text-slate-600 space-y-1.5 border border-slate-100">
                         <div className="flex items-center gap-2">
                           <Phone className="w-3.5 h-3.5 text-slate-400" />
@@ -713,7 +673,6 @@ export default function BuildingStaffPage() {
                         </div>
                       </div>
 
-                      {/* Assigned Buildings Breakdown */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600">
                           <span>{language === 'th' ? 'อาคารที่ดูแลหลัก (Lead):' : 'Lead Buildings:'}</span>
@@ -738,7 +697,6 @@ export default function BuildingStaffPage() {
                       </div>
                     </div>
 
-                    {/* Active Workload Indicator & Quick Replace Trigger */}
                     <div className="pt-3.5 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                       <span className="text-slate-500 text-[11px]">
                         {language === 'th' ? 'งานซ่อมค้าง:' : 'Active Tasks:'} <b>{activeTickets.length}</b>
@@ -765,17 +723,13 @@ export default function BuildingStaffPage() {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* MODAL 1: ADD NEW TECHNICIAN (พร้อมตัวเลือกมาแทนที่ช่างเดิม) */}
-        {/* ========================================================================= */}
         {isAddTechModalOpen && (
-          <div 
+          <div
             onClick={(e) => { if (e.target === e.currentTarget) setIsAddTechModalOpen(false); }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
           >
             <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full overflow-hidden transform transition-all max-h-[92vh] flex flex-col">
-              
-              {/* Modal Header */}
+
               <div className="bg-[#0A3D91] text-white p-5 px-6 flex items-start justify-between shrink-0">
                 <div>
                   <div className="inline-flex items-center gap-1.5 text-xs text-blue-200 font-medium mb-1">
@@ -786,8 +740,8 @@ export default function BuildingStaffPage() {
                     {language === 'th' ? 'เพิ่มช่างคนใหม่ / บรรจุช่างมาแทนที่' : 'Add New Technician / Replacement'}
                   </h3>
                   <p className="text-xs text-blue-100 mt-0.5">
-                    {language === 'th' 
-                      ? 'กรอกข้อมูลช่างคนใหม่เพื่อเพิ่มในระบบและเลือกโอนย้ายงานตึกได้ทันที' 
+                    {language === 'th'
+                      ? 'กรอกข้อมูลช่างคนใหม่เพื่อเพิ่มในระบบและเลือกโอนย้ายงานตึกได้ทันที'
                       : 'Register new personnel and optionally reassign existing building duties.'}
                   </p>
                 </div>
@@ -800,10 +754,8 @@ export default function BuildingStaffPage() {
                 </button>
               </div>
 
-              {/* Modal Scrollable Form */}
               <form onSubmit={handleCreateTechnician} className="p-6 space-y-4 overflow-y-auto">
-                
-                {/* 1. Name & Specialty */}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
@@ -840,7 +792,6 @@ export default function BuildingStaffPage() {
                   </div>
                 </div>
 
-                {/* 2. Role Title in Thai & English */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
@@ -866,7 +817,6 @@ export default function BuildingStaffPage() {
                   </div>
                 </div>
 
-                {/* 3. Phone & Email */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
@@ -896,7 +846,6 @@ export default function BuildingStaffPage() {
                   </div>
                 </div>
 
-                {/* 4. Avatar Presets */}
                 <div>
                   <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
                     {language === 'th' ? 'เลือกรูปภาพประจำตัวช่าง' : 'Select Avatar Preset'}
@@ -922,7 +871,6 @@ export default function BuildingStaffPage() {
                   </div>
                 </div>
 
-                {/* 5. ⭐ REPLACEMENT FEATURE: มาแทนที่ช่างคนเดิมหรือไม่? */}
                 <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <input
@@ -967,7 +915,6 @@ export default function BuildingStaffPage() {
                   )}
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                   <button
                     type="button"
@@ -990,16 +937,13 @@ export default function BuildingStaffPage() {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* MODAL 2: 1-CLICK REPLACE TECHNICIAN (โอนย้ายงานให้ช่างคนอื่น) */}
-        {/* ========================================================================= */}
         {replacingTech && (
-          <div 
+          <div
             onClick={(e) => { if (e.target === e.currentTarget) setReplacingTech(null); }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
           >
             <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden transform transition-all">
-              
+
               <div className="bg-indigo-900 text-white p-5 px-6 flex items-start justify-between">
                 <div>
                   <div className="inline-flex items-center gap-1.5 text-xs text-indigo-200 font-medium mb-1">
@@ -1076,11 +1020,8 @@ export default function BuildingStaffPage() {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* MODAL 3: DELETE TECHNICIAN CONFIRMATION */}
-        {/* ========================================================================= */}
         {techToDelete && (
-          <div 
+          <div
             onClick={(e) => { if (e.target === e.currentTarget) setTechToDelete(null); }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
           >
@@ -1089,19 +1030,18 @@ export default function BuildingStaffPage() {
                 <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
                   <Trash2 className="w-6 h-6" />
                 </div>
-                
+
                 <div className="text-center">
                   <h3 className="text-lg font-bold text-slate-900">
                     {language === 'th' ? 'ยืนยันการลบช่างออกจากระบบ?' : 'Delete Technician?'}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    {language === 'th' 
+                    {language === 'th'
                       ? `คุณกำลังจะลบ "${techToDelete.name}" ออกจากระบบช่าง`
                       : `You are about to remove "${techToDelete.name}".`}
                   </p>
                 </div>
 
-                {/* If tech is assigned to buildings, prompt replacement */}
                 {allocations.some(b => b.leadTechnician === techToDelete.name) && (
                   <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs space-y-2">
                     <p className="font-bold text-amber-900">
@@ -1145,17 +1085,13 @@ export default function BuildingStaffPage() {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* MODAL 4: EDIT BUILDING ALLOCATION MODAL */}
-        {/* ========================================================================= */}
         {editingBuilding && (
-          <div 
+          <div
             onClick={(e) => { if (e.target === e.currentTarget) closeEditModal(); }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
           >
             <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden transform transition-all">
-              
-              {/* Modal Header */}
+
               <div className="bg-[#0A3D91] text-white p-5 px-6 flex items-start justify-between">
                 <div>
                   <div className="inline-flex items-center gap-1.5 text-xs text-blue-200 font-medium mb-1">
@@ -1178,10 +1114,8 @@ export default function BuildingStaffPage() {
                 </button>
               </div>
 
-              {/* Modal Form */}
               <form onSubmit={handleSaveAllocation} className="p-6 space-y-5">
-                
-                {/* 1. Primary Lead Technician Selector */}
+
                 <div>
                   <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
                     {language === 'th' ? '🛠️ ช่างผู้รับผิดชอบหลัก (Primary Lead Tech)' : 'Primary Lead Technician'}
@@ -1204,13 +1138,12 @@ export default function BuildingStaffPage() {
                     ))}
                   </select>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    {language === 'th' 
-                      ? 'คำร้องใหม่ที่แจ้งเข้ามายังอาคารนี้ จะได้รับการแนะนำหรือมอบหมายให้ช่างท่านนี้เป็นลำดับแรก' 
+                    {language === 'th'
+                      ? 'คำร้องใหม่ที่แจ้งเข้ามายังอาคารนี้ จะได้รับการแนะนำหรือมอบหมายให้ช่างท่านนี้เป็นลำดับแรก'
                       : 'New repair tickets in this building will default to this lead specialist.'}
                   </p>
                 </div>
 
-                {/* 2. Support Technicians Multi-Selector */}
                 <div>
                   <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
                     {language === 'th' ? '🤝 ทีมช่างสนับสนุนสำรอง (Support Technicians)' : 'Support Technicians'}
@@ -1227,7 +1160,7 @@ export default function BuildingStaffPage() {
                           disabled={isLead}
                           onClick={() => toggleSupportTech(t.name)}
                           className={`flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-all border cursor-pointer ${
-                            isLead 
+                            isLead
                               ? 'opacity-40 bg-slate-200 border-slate-300 cursor-not-allowed'
                               : isSelected
                               ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold shadow-2xs'
@@ -1251,7 +1184,6 @@ export default function BuildingStaffPage() {
                   </div>
                 </div>
 
-                {/* 3. Building Facility Notes */}
                 <div>
                   <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
                     {language === 'th' ? '📝 บันทึกข้อมูลเฉพาะของอาคาร (Facility Notes)' : 'Facility Notes'}
@@ -1265,7 +1197,6 @@ export default function BuildingStaffPage() {
                   />
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                   <button
                     type="button"

@@ -1,28 +1,16 @@
-/**
- * @file LoginPage.tsx
- * @description หน้าเข้าสู่ระบบของแอปพลิเคชัน (Authentication & Login Page)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. ฟอร์มเข้าสู่ระบบด้วยอีเมลและรหัสผ่าน (Email / Password Login)
- * 2. การเข้าสู่ระบบด้วย Google Account (Google OAuth Sign-In ผ่าน Firebase Auth)
- * 3. ปุ่มเข้าสู่ระบบด่วนแบบ Demo 1 คลิก (Quick Demo Accounts):
- *    - บัญชี Admin (`bimcub12345@cmu.ac.th`) -> สลับเป็นบทบาท 'admin' และเข้าสู่หน้า `/dashboard`
- *    - บัญชี Student (`student@cmu.ac.th`) -> สลับเป็นบทบาท 'student' และเข้าสู่หน้า `/tickets`
- * 4. การจัดการ State แสดง/ซ่อนรหัสผ่าน (Toggle Password Visibility)
- * 5. การตรวจสอบความถูกต้องของฟอร์ม (Form Validation) และแสดงข้อความแจ้งเตือนข้อผิดพลาด
- */
+
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Building2, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
-  Loader2, 
-  ShieldCheck, 
+import {
+  Building2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Loader2,
+  ShieldCheck,
   GraduationCap,
   Copy,
   Check,
@@ -34,11 +22,11 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useRole } from '../contexts/RoleContext';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  getCMUAuthConfig, 
-  saveCMUAuthConfig, 
-  buildCMUAuthorizeUrl, 
-  MOCK_CMU_ACCOUNTS, 
+import {
+  getCMUAuthConfig,
+  saveCMUAuthConfig,
+  buildCMUAuthorizeUrl,
+  MOCK_CMU_ACCOUNTS,
   CMUUserInfo,
   CPE_REGISTERED_REDIRECT_URIS,
   exchangeCMUCode,
@@ -68,7 +56,7 @@ export default function LoginPage() {
     if (e) e.preventDefault();
     const accountName = cmuAccountInput.trim() || 'student';
     const isStaff = cmuRoleInput === 'admin' || accountName.includes('admin') || accountName === 'bimcub12345';
-    
+
     const cmuUserData: CMUUserInfo = {
       cmuitaccount_name: accountName.replace('@cmu.ac.th', ''),
       cmuitaccount: accountName.includes('@') ? accountName : `${accountName}@cmu.ac.th`,
@@ -126,7 +114,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     setErrorMessage('');
-    
+
     try {
       const result = await signInWithGoogle();
       if (result.success) {
@@ -143,7 +131,7 @@ export default function LoginPage() {
   };
 
   const handleCmuOAuthLogin = () => {
-    // ส่งผู้ใช้ไปยังหน้ายืนยันตัวตน CMU OAuth (oauth497.cpecmu.com)
+
     const authUrl = buildCMUAuthorizeUrl();
     if (window.self !== window.top) {
       window.open(authUrl, '_blank');
@@ -216,7 +204,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 font-sans text-slate-900">
-      {/* Left Side: Image & Branding */}
       <div className="hidden md:flex md:w-1/2 relative bg-[#0A3D91] items-center justify-center overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
@@ -224,7 +211,7 @@ export default function LoginPage() {
           className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay"
         />
         <div className="absolute inset-0 bg-linear-to-t from-[#0A3D91] to-transparent opacity-80"></div>
-        
+
         <div className="relative z-10 px-12 lg:px-24 flex flex-col justify-center h-full w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -244,9 +231,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side: Login Container */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-24 bg-white md:bg-slate-50">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -261,7 +247,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* 1. เข้าสู่ระบบด้วย CMU Account */}
           <div className="mb-3">
             <button
               type="button"
@@ -275,7 +260,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* 2. Google Login Button */}
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -301,14 +285,12 @@ export default function LoginPage() {
             )}
           </button>
 
-          {/* 3. Divider */}
           <div className="relative flex py-6 items-center">
             <div className="grow border-t border-slate-200"></div>
             <span className="shrink-0 mx-4 text-slate-400 text-xs uppercase tracking-wider font-medium">หรือ เข้าสู่ระบบด้วยอีเมล</span>
             <div className="grow border-t border-slate-200"></div>
           </div>
 
-          {/* Error message alert */}
           {errorMessage && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
@@ -316,9 +298,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* 3. Manual Login Section */}
           <form className="space-y-4" onSubmit={handleLogin}>
-            {/* Email Input */}
             <div className="space-y-1.5">
               <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                 Email Address
@@ -342,7 +322,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Password Input */}
             <div className="space-y-1.5">
               <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                 Password
@@ -374,14 +353,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Forgot Password Link */}
             <div className="flex justify-end pt-1">
               <a href="#" className="text-sm font-medium text-[#0A3D91] hover:text-blue-800 transition-colors">
                 Forgot Password?
               </a>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-[#0A3D91] hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A3D91] transition-all mt-2 cursor-pointer"
@@ -392,7 +369,6 @@ export default function LoginPage() {
         </motion.div>
       </div>
 
-      {/* CMU OAuth Modal & Sandbox Helper */}
       <AnimatePresence>
         {showCmuModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
@@ -402,7 +378,6 @@ export default function LoginPage() {
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full max-h-[90vh] overflow-y-auto"
             >
-              {/* Modal Header */}
               <div className="bg-linear-to-r from-purple-800 to-indigo-900 text-white p-5 rounded-t-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
@@ -422,7 +397,6 @@ export default function LoginPage() {
               </div>
 
               <div className="p-6 space-y-4">
-                {/* แท็บสลับระหว่างเข้าสู่ระบบทันที กับตั้งค่า Server โครงงาน */}
                 <div className="flex border border-purple-200/80 bg-purple-50/70 p-1 rounded-xl gap-1">
                   <button
                     type="button"
@@ -451,7 +425,6 @@ export default function LoginPage() {
                   </button>
                 </div>
 
-                {/* แท็บ 1: เข้าสู่ระบบ CMU ทันที */}
                 {cmuModalTab === 'login' && (
                   <div className="space-y-4 pt-1">
                     <form onSubmit={handleDirectCmuLogin} className="space-y-3.5 bg-linear-to-b from-purple-50/50 to-white p-4 rounded-xl border border-purple-100">
@@ -471,7 +444,6 @@ export default function LoginPage() {
                         </p>
                       </div>
 
-                      {/* เลือกว่าจะเข้าเป็น นักศึกษา หรือ แอดมิน */}
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1.5">
                           เลือกบทบาทที่ต้องการทดสอบ:
@@ -515,7 +487,6 @@ export default function LoginPage() {
                       </button>
                     </form>
 
-                    {/* ปุ่มบัญชีทดสอบด่วน 1 คลิก */}
                     <div className="space-y-2 pt-1 border-t border-slate-100">
                       <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                         หรือคลิกเลือกบัญชีทดสอบทันที:
@@ -534,8 +505,8 @@ export default function LoginPage() {
                                   {acc.prename_TH}{acc.firstname_TH} {acc.lastname_TH}
                                 </span>
                                 <span className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${
-                                  acc.itaccounttype_id === 'StaffAcc' 
-                                    ? 'bg-amber-100 text-amber-800' 
+                                  acc.itaccounttype_id === 'StaffAcc'
+                                    ? 'bg-amber-100 text-amber-800'
                                     : 'bg-blue-100 text-blue-800'
                                 }`}>
                                   {acc.itaccounttype_TH || 'นักศึกษา'}
@@ -555,10 +526,8 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* แท็บ 2: เชื่อมต่อ Server CPE โครงงานจริง */}
                 {cmuModalTab === 'real_oauth' && (
                   <div className="space-y-4 pt-1">
-                    {/* คำอธิบาย */}
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 space-y-1">
                       <div className="font-bold flex items-center gap-1.5 text-amber-950">
                         <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
@@ -569,7 +538,6 @@ export default function LoginPage() {
                       </p>
                     </div>
 
-                    {/* เลือกกลุ่ม */}
                     <div className="space-y-1.5">
                       <label className="block text-xs font-bold text-slate-700">
                         เลือกกลุ่มโครงงาน CPE ของคุณ (FSG 11 - FSG 20):
@@ -599,7 +567,6 @@ export default function LoginPage() {
                       </div>
                     </div>
 
-                    {/* ปุ่มเปิด CMU OAuth จริง */}
                     <button
                       type="button"
                       onClick={handleLaunchRealCmuOAuth}
@@ -609,7 +576,6 @@ export default function LoginPage() {
                       <span>เปิดหน้า CMU OAuth Portal (oauth.cmu.ac.th)</span>
                     </button>
 
-                    {/* วาง Code หรือ URL */}
                     <div className="p-3 rounded-xl border border-indigo-200 bg-indigo-50/40 space-y-2">
                       <span className="text-xs font-bold text-indigo-950 block">
                         วาง Code หรือ URL ที่ได้จาก CMU (กรณีเซิร์ฟเวอร์ยังไม่เปิด):

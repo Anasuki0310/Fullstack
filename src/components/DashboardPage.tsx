@@ -1,27 +1,8 @@
-/**
- * @file DashboardPage.tsx
- * @description หน้าแดชบอร์ดสรุปภาพรวมและสถิติสำหรับผู้ดูแลระบบ (Admin Analytics & KPI Dashboard)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. ตรวจสอบสิทธิ์ผู้ใช้: หากเป็นสิทธิ์ 'student' จะ Redirect ไปที่ `/tickets` ทันที
- * 2. ตัวกรองเลือกเดือนและปี (Monthly Filter): สามารถเลือกดูสถิติย้อนหลังหรือล่วงหน้าได้แบบเรียลไทม์
- * 3. คำนวณตัวชี้วัดหลัก (KPI Metrics Cards):
- *    - คำร้องทั้งหมดในเดือน (Total Tickets)
- *    - งานที่กำลังดำเนินการ (In Progress)
- *    - งานที่รอดำเนินการ (Pending)
- *    - งานที่เสร็จสิ้น (Completed)
- *    - อัตราความสำเร็จตาม SLA (SLA Completion Rate %)
- * 4. กราฟและการแสดงผลข้อมูลเชิงลึก (Recharts):
- *    - กราฟแนวโน้มคำร้องรายสัปดาห์ (Weekly Tickets AreaChart)
- *    - กราฟสัดส่วนหมวดหมู่ปัญหา (Category Breakdown PieChart)
- *    - กราฟสถิติตามอาคาร (Building Distribution BarChart)
- * 5. กล่องเตือนงานด่วนฉุกเฉิน (Urgent Attention Tickets): แสดงตั๋วที่มีความสำคัญระดับ Urgent
- * 6. ฟังก์ชันพิมพ์รายงาน (Print Report) และดาวน์โหลดข้อมูล CSV
- */
+
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
+import {
   AlertCircle,
   Clock,
   CheckCircle2,
@@ -43,13 +24,13 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { useRole } from '../contexts/RoleContext';
 import { useTickets, TicketItem } from '../contexts/TicketContext';
-import { 
+import {
   AreaChart,
   Area,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -68,9 +49,9 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { tickets } = useTickets();
 
-  // Current selected month & year (Default: October 2026, matching system time)
+
   const [selectedYear, setSelectedYear] = useState<number>(2026);
-  const [selectedMonth, setSelectedMonth] = useState<number>(9); // 0-indexed: 9 = October
+  const [selectedMonth, setSelectedMonth] = useState<number>(9);
 
   useEffect(() => {
     if (role === 'student') {
@@ -97,8 +78,8 @@ export default function DashboardPage() {
     { value: 11, labelEn: 'December', labelTh: 'ธันวาคม' },
   ];
 
-  const currentMonthLabel = language === 'th' 
-    ? `${months[selectedMonth].labelTh} ${selectedYear + 543}` 
+  const currentMonthLabel = language === 'th'
+    ? `${months[selectedMonth].labelTh} ${selectedYear + 543}`
     : `${months[selectedMonth].labelEn} ${selectedYear}`;
 
   const handlePrevMonth = () => {
@@ -119,7 +100,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Helper to extract month & year from ticket date or createdAt
+
   const getTicketMonthYear = (ticket: TicketItem) => {
     if (ticket.createdAt) {
       const d = new Date(ticket.createdAt);
@@ -131,11 +112,11 @@ export default function DashboardPage() {
         return { month: d.getMonth(), year: d.getFullYear(), date: d.getDate() };
       }
     }
-    // Fallback: Oct 2026 default
+
     return { month: 9, year: 2026, date: 20 };
   };
 
-  // Tickets filtered to the selected month & year
+
   const monthlyTickets = useMemo(() => {
     return tickets.filter(t => {
       const { month, year } = getTicketMonthYear(t);
@@ -143,7 +124,7 @@ export default function DashboardPage() {
     });
   }, [tickets, selectedMonth, selectedYear]);
 
-  // Overall counts for selected month
+
   const totalMonthlyCount = monthlyTickets.length;
   const completedMonthlyCount = monthlyTickets.filter(t => t.status === 'Completed').length;
   const inProgressMonthlyCount = monthlyTickets.filter(t => t.status === 'In Progress').length;
@@ -151,17 +132,17 @@ export default function DashboardPage() {
   const openMonthlyCount = monthlyTickets.filter(t => t.status === 'Open').length;
   const urgentMonthlyCount = monthlyTickets.filter(t => t.priority === 'Urgent').length;
 
-  // Resolution Rate %
-  const resolutionRate = totalMonthlyCount > 0 
-    ? Math.round((completedMonthlyCount / totalMonthlyCount) * 100) 
+
+  const resolutionRate = totalMonthlyCount > 0
+    ? Math.round((completedMonthlyCount / totalMonthlyCount) * 100)
     : 0;
 
-  // Average progress % in selected month
+
   const averageProgress = totalMonthlyCount > 0
     ? Math.round(monthlyTickets.reduce((acc, t) => acc + (t.progress !== undefined ? t.progress : (t.status === 'Completed' ? 100 : t.status === 'In Progress' ? 50 : 20)), 0) / totalMonthlyCount)
     : 0;
 
-  // Generate trend data for selected month (divided into 4 weeks or calendar intervals)
+
   const monthlyTrendData = useMemo(() => {
     const weeks = [
       { name: language === 'th' ? 'สัปดาห์ 1 (1-7)' : 'Week 1', total: 0, completed: 0 },
@@ -187,7 +168,7 @@ export default function DashboardPage() {
     return weeks;
   }, [monthlyTickets, language]);
 
-  // Category breakdown in selected month
+
   const categoryData = useMemo(() => {
     const map: Record<string, number> = {};
     monthlyTickets.forEach(t => {
@@ -201,7 +182,7 @@ export default function DashboardPage() {
     ];
   }, [monthlyTickets]);
 
-  // Top buildings with issues in selected month
+
   const topBuildingsData = useMemo(() => {
     const map: Record<string, { total: number; completed: number; active: number }> = {};
     monthlyTickets.forEach(t => {
@@ -274,8 +255,7 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Page Top Header with Month Navigator & Staff Allocation CTA */}
+
         <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -294,7 +274,6 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Month/Year Selector */}
             <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-2xs">
               <button
                 type="button"
@@ -304,7 +283,7 @@ export default function DashboardPage() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              
+
               <div className="flex items-center gap-1.5 px-2">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <select
@@ -339,7 +318,6 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* Export CSV Report Button */}
             <button
               type="button"
               onClick={handleExportCSV}
@@ -349,7 +327,6 @@ export default function DashboardPage() {
               <span>{language === 'th' ? 'ส่งออกสรุป (CSV)' : 'Export CSV'}</span>
             </button>
 
-            {/* Quick Action: Staff Building Allocation */}
             <Link
               to="/building-staff"
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-[#0A3D91] hover:bg-blue-900 rounded-xl transition-all shadow-xs cursor-pointer"
@@ -360,10 +337,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 4 Monthly KPI Highlight Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          
-          {/* Card 1: Total Monthly Tickets */}
+
           <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -385,7 +360,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Card 2: Monthly Resolution Rate */}
           <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -401,15 +375,14 @@ export default function DashboardPage() {
                 <span className="text-xs text-emerald-700 font-medium">({completedMonthlyCount}/{totalMonthlyCount || 0})</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2 mt-2.5 overflow-hidden">
-                <div 
-                  className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+                <div
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${resolutionRate}%` }}
                 />
               </div>
             </div>
           </div>
 
-          {/* Card 3: Active In-Progress Workload */}
           <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -431,7 +404,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Card 4: Urgent & Emergency Repairs */}
           <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -447,7 +419,7 @@ export default function DashboardPage() {
                 <span className="text-xs text-red-500 font-medium">{language === 'th' ? 'ต้องแก้ด่วน' : 'critical'}</span>
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                {urgentMonthlyCount > 0 
+                {urgentMonthlyCount > 0
                   ? (language === 'th' ? '⚠️ มีงานซ่อมที่มีผลกระทบต่ออาคารสูง' : 'Immediate technician priority')
                   : (language === 'th' ? '✅ ไม่มีงานด่วนค้างในเดือนนี้' : 'No critical emergencies')}
               </p>
@@ -456,10 +428,8 @@ export default function DashboardPage() {
 
         </div>
 
-        {/* Charts Row: Monthly Trend & Category Breakdown */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Chart 1: Monthly Weekly Progression (2 Cols) */}
+
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
@@ -498,7 +468,7 @@ export default function DashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12 }} />
                   <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Area type="monotone" dataKey="total" name={language === 'th' ? 'คำร้องทั้งหมด' : 'Total Tickets'} stroke="#0A3D91" strokeWidth={3} fillOpacity={1} fill="url(#totalGrad)" />
@@ -508,7 +478,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Chart 2: Categories Breakdown in Selected Month (1 Col) */}
           <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-4 flex flex-col justify-between">
             <div>
               <h3 className="font-bold text-slate-900 text-base">
@@ -535,7 +504,7 @@ export default function DashboardPage() {
                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     formatter={(val: any) => [`${val} ${language === 'th' ? 'รายการ' : 'tickets'}`, '']}
                     contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }}
                   />
@@ -555,10 +524,8 @@ export default function DashboardPage() {
 
         </div>
 
-        {/* Section: Top Buildings with Issues & Recent Monthly Tickets */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Left: Top Buildings with Maintenance in Month */}
+
           <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -569,7 +536,7 @@ export default function DashboardPage() {
                   {language === 'th' ? `จัดอันดับอาคารในเดือน ${currentMonthLabel}` : `Locations with most incidents in ${currentMonthLabel}`}
                 </p>
               </div>
-              <Link 
+              <Link
                 to="/building-staff"
                 className="text-xs font-bold text-[#0A3D91] hover:underline flex items-center gap-1"
               >
@@ -596,13 +563,13 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
-                        <div 
-                          className="bg-[#0A3D91] h-full" 
+                        <div
+                          className="bg-[#0A3D91] h-full"
                           style={{ width: `${(bldg.completed / (bldg.total || 1)) * 100}%` }}
                           title={`Completed: ${bldg.completed}`}
                         />
-                        <div 
-                          className="bg-amber-400 h-full" 
+                        <div
+                          className="bg-amber-400 h-full"
                           style={{ width: `${(bldg.active / (bldg.total || 1)) * 100}%` }}
                           title={`Active: ${bldg.active}`}
                         />
@@ -618,7 +585,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right: Recent Tickets in Selected Month (2 Cols) */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -629,7 +595,7 @@ export default function DashboardPage() {
                   {language === 'th' ? `แสดงรายการคำร้องที่ถูกแจ้งใน ${currentMonthLabel}` : `Recent submissions in ${currentMonthLabel}`}
                 </p>
               </div>
-              <Link 
+              <Link
                 to="/tickets"
                 className="text-xs font-bold text-[#0A3D91] hover:underline flex items-center gap-1"
               >
@@ -651,8 +617,8 @@ export default function DashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs">
                   {monthlyTickets.slice(0, 5).map((t) => (
-                    <tr 
-                      key={t.id} 
+                    <tr
+                      key={t.id}
                       onClick={() => navigate(`/ticket/${t.id}`)}
                       className="hover:bg-slate-50/80 cursor-pointer transition-colors"
                     >
@@ -669,7 +635,7 @@ export default function DashboardPage() {
                             <span>{t.progress || (t.status === 'Completed' ? 100 : 25)}%</span>
                           </div>
                           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className={`h-full rounded-full ${
                                 t.status === 'Completed' ? 'bg-emerald-500' : 'bg-[#0A3D91]'
                               }`}

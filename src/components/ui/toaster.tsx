@@ -1,25 +1,10 @@
-/**
- * @file toaster.tsx
- * @description คอมโพเนนต์แสดงผลการแจ้งเตือนป็อปอัป (Toast Notification Container & Render List)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. ดึงรายการ toast จาก `useToast()`
- * 2. แสดงผลกล่องแจ้งเตือนลอยที่มุมบนขวาของหน้าจอ (`fixed top-5 right-5 z-[9999]`)
- * 3. ปรับสไตล์ตาม Variant:
- *    - `destructive`: พื้นหลังสีแดง พร้อมไอคอน AlertCircle (สำหรับข้อผิดพลาด/ลบข้อมูล)
- *    - `success`: พื้นหลังสีเขียวเอเมอรัลด์ พร้อมไอคอน CheckCircle2 (สำหรับการบันทึกสำเร็จ)
- *    - `default`: พื้นหลังสีขาว/กรมท่าคลาสสิก (สำหรับข้อความทั่วไป)
- * 4. มีปุ่มกากบาท (X) เพื่อปิดการแจ้งเตือนได้ทันที
- */
+
 
 import React from 'react';
 import { useToast } from '../../hooks/use-toast';
 import { X, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 
-/**
- * คอมโพเนนต์ Toaster:
- * วางไว้ที่ระดับบนสุดของแอป (App.tsx) เพื่อทำหน้าที่เรนเดอร์ Toast ทุกตัวที่ถูก dispatch
- */
+
 export function Toaster() {
   const { toasts, dismiss } = useToast();
 

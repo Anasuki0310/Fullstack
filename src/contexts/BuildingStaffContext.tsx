@@ -1,64 +1,54 @@
-/**
- * @file BuildingStaffContext.tsx
- * @description คอนเท็กซ์จัดการข้อมูลช่างซ่อมบำรุงและการจัดสรรบุคลากรประจำแต่ละอาคาร (Technicians & Building Allocations State)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. เก็บและจัดการฐานข้อมูลช่างซ่อมบำรุง (Technician Profiles) เช่น ชื่อ, เบอร์โทร, ความเชี่ยวชาญ, สถานะการทำงาน
- * 2. เก็บและจัดการข้อมูลการจัดสรรช่างประจำอาคารต่างๆ ในมหาวิทยาลัย (Lead Tech & Support Techs)
- * 3. มีฟังก์ชันระบบเพิ่มช่างใหม่ (Add Technician) ที่สามารถระบุตัวช่างเดิมเพื่อสลับแทนที่ได้ทันที
- * 4. มีระบบสลับ/แทนที่ช่างอัตโนมัติ 1-Click (Replace Technician) เพื่ออัปเดตทุกอาคารที่ช่างคนเดิมรับผิดชอบ
- * 5. บันทึกและซิงค์ข้อมูลลงใน localStorage อัตโนมัติ เพื่อให้ข้อมูลคงอยู่แม้รีเฟรชหน้าเว็บ
- */
+
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-/** ข้อมูลโปรไฟล์ของช่างซ่อมบำรุง */
+
 export interface TechnicianProfile {
-  id: string;             // รหัสประจำตัวช่าง เช่น 'tech-1'
-  name: string;           // ชื่อ-นามสกุล และความเชี่ยวชาญ
-  roleTh: string;         // ตำแหน่งหน้าที่ภาษาไทย
-  roleEn: string;         // ตำแหน่งหน้าที่ภาษาอังกฤษ
-  specialty: string;      // ความเชี่ยวชาญเฉพาะทาง (Electrical, Plumbing, HVAC, Carpentry, AV/IT, Cleaning)
-  phone: string;          // เบอร์โทรศัพท์ติดต่อ
-  email: string;          // อีเมลติดต่อ
-  avatar: string;         // รูปภาพโปรไฟล์
-  status: 'active' | 'on_leave' | 'busy'; // สถานะความพร้อมในการปฏิบัติงาน
+  id: string;
+  name: string;
+  roleTh: string;
+  roleEn: string;
+  specialty: string;
+  phone: string;
+  email: string;
+  avatar: string;
+  status: 'active' | 'on_leave' | 'busy';
 }
 
-/** ข้อมูลการจัดสรรบุคลากรประจำอาคาร */
+
 export interface BuildingAllocation {
-  id: string;             // รหัสอาคาร
-  nameEn: string;         // ชื่ออาคารภาษาอังกฤษ
-  nameTh: string;         // ชื่ออาคารภาษาไทย
-  zone: 'North Campus' | 'Central Campus' | 'South Campus' | 'Engineering Zone'; // โซนที่ตั้ง
-  leadTechnician: string; // ชื่อหัวหน้าช่างประจำตึก
-  leadTechnicianPhone: string; // เบอร์โทรศัพท์ติดต่อหัวหน้าช่าง
-  supportTechnicians: string[]; // รายชื่อช่างสนับสนุนประจำตึก
-  notes?: string;         // หมายเหตุหรือระบบพิเศษประจำตึก
-  updatedAt: string;      // วันที่อัปเดตข้อมูลล่าสุด
+  id: string;
+  nameEn: string;
+  nameTh: string;
+  zone: 'North Campus' | 'Central Campus' | 'South Campus' | 'Engineering Zone';
+  leadTechnician: string;
+  leadTechnicianPhone: string;
+  supportTechnicians: string[];
+  notes?: string;
+  updatedAt: string;
 }
 
-/** รูปแบบ Interface สำหรับส่งออกผ่าน Context */
+
 export interface BuildingStaffContextType {
-  allocations: BuildingAllocation[]; // รายการการจัดสรรช่างประจำอาคารทั้งหมด
-  technicians: TechnicianProfile[];   // รายชื่อช่างซ่อมบำรุงทั้งหมดในระบบ
-  /** อัปเดตช่างประจำอาคาร */
+  allocations: BuildingAllocation[];
+  technicians: TechnicianProfile[];
+
   updateAllocation: (buildingId: string, leadTech: string, supportTechs: string[], notes?: string) => void;
-  /** เพิ่มช่างคนใหม่ พร้อมตัวเลือกสลับแทนที่ช่างเดิมทันที */
+
   addTechnician: (tech: Omit<TechnicianProfile, 'id'>, replacesTechName?: string) => TechnicianProfile;
-  /** แก้ไขข้อมูลโปรไฟล์ช่าง */
+
   updateTechnician: (id: string, updates: Partial<TechnicianProfile>) => void;
-  /** ลบช่างออกจากระบบ พร้อมโอนย้ายงานให้อีกคน */
+
   deleteTechnician: (id: string, replacementTechName?: string) => void;
-  /** โอนย้าย/แทนที่งานช่างคนเก่าด้วยช่างคนใหม่ทุกอาคาร */
+
   replaceTechnician: (oldTechName: string, newTechName: string) => void;
-  /** ดึงข้อมูลหัวหน้าช่างประจำอาคารจากชื่อตึก */
+
   getLeadTechForBuilding: (buildingName: string) => TechnicianProfile | undefined;
-  /** ดึงข้อมูลช่างสนับสนุนประจำอาคารจากชื่อตึก */
+
   getSupportTechsForBuilding: (buildingName: string) => TechnicianProfile[];
-  /** ค้นหาข้อมูลอาคารจากการค้นหาชื่อตึก */
+
   getBuildingAllocation: (buildingName: string) => BuildingAllocation | undefined;
-  /** รีเซ็ตข้อมูลกลับสู่ค่าเริ่มต้น */
+
   resetToDefaults: () => void;
 }
 
@@ -322,13 +312,7 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [technicians]);
 
-  /**
-   * ฟังก์ชัน updateAllocation:
-   * อัปเดตข้อมูลการจัดสรรช่างประจำอาคารเป้าหมาย
-   * - หาเบอร์โทรของหัวหน้าช่างใหม่อัตโนมัติจากฐานข้อมูลช่าง
-   * - บันทึกรายชื่อช่างหลัก (Lead Tech) และช่างสนับสนุน (Support Techs)
-   * - อัปเดตวันที่แก้ไข (updatedAt) เป็นวันปัจจุบัน
-   */
+
   const updateAllocation = (
     buildingId: string,
     leadTech: string,
@@ -355,14 +339,7 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
-  /**
-   * ฟังก์ชัน addTechnician:
-   * เพิ่มช่างซ่อมบำรุงคนใหม่เข้าสู่ระบบ
-   * - สร้างรหัสประจำตัวอัตโนมัติ (ID จาก timestamp)
-   * - เพิ่มโปรไฟล์ช่างใหม่ลงในรายการช่าง
-   * - หากมีระบุ `replacesTechName` ระบบจะเรียกใช้ replaceTechnician อัตโนมัติ
-   *   เพื่อโอนย้ายงานทุกตึกของช่างคนเก่าให้ช่างคนใหม่ทันที
-   */
+
   const addTechnician = (
     techData: Omit<TechnicianProfile, 'id'>,
     replacesTechName?: string
@@ -375,7 +352,7 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setTechnicians((prev) => [newTech, ...prev]);
 
-    // หากช่างใหม่มาแทนที่ช่างเดิม ทำการโอนย้ายความรับผิดชอบทุกตึกทันที
+
     if (replacesTechName && replacesTechName.trim()) {
       replaceTechnician(replacesTechName.trim(), newTech.name);
     }
@@ -383,13 +360,7 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
     return newTech;
   };
 
-  /**
-   * ฟังก์ชัน replaceTechnician:
-   * โอนย้ายความรับผิดชอบและสลับตัวช่างแบบ 1-Click
-   * - ค้นหาเบอร์โทรของช่างคนใหม่
-   * - วนลูปตรวจสอบทุกอาคาร: หากอาคารใดมีช่างคนเก่าเป็นหัวหน้าช่าง ให้เปลี่ยนเป็นช่างใหม่พร้อมอัปเดตเบอร์โทร
-   * - หากอาคารใดมีช่างคนเก่าเป็นช่างสนับสนุน ให้เปลี่ยนชื่อในลิสต์สนับสนุนเป็นช่างใหม่
-   */
+
   const replaceTechnician = (oldTechName: string, newTechName: string) => {
     const newTechProfile = technicians.find((t) => t.name === newTechName);
     const phone = newTechProfile?.phone || '081-000-0000';
@@ -420,17 +391,13 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
-  /**
-   * ฟังก์ชัน updateTechnician:
-   * แก้ไขข้อมูลช่าง (เช่น ชื่อ, เบอร์โทร, ความเชี่ยวชาญ, สถานะ)
-   * - หากมีการแก้ไขชื่อหรือเบอร์โทร จะอัปเดตข้อมูลในอาคารที่ช่างคนนี้สังกัดอยู่ด้วยโดยอัตโนมัติ
-   */
+
   const updateTechnician = (id: string, updates: Partial<TechnicianProfile>) => {
     setTechnicians((prev) => {
       const oldTech = prev.find((t) => t.id === id);
       const updatedList = prev.map((t) => (t.id === id ? { ...t, ...updates } : t));
 
-      // หากเปลี่ยนชื่อช่าง ให้ไปอัปเดตชื่อในรายการอาคารด้วย
+
       if (oldTech && updates.name && updates.name !== oldTech.name) {
         replaceTechnician(oldTech.name, updates.name);
       } else if (oldTech && updates.phone && updates.phone !== oldTech.phone) {
@@ -443,12 +410,7 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  /**
-   * ฟังก์ชัน deleteTechnician:
-   * ลบช่างออกจากระบบ
-   * - หากระบุ `replacementTechName` ระบบจะโอนย้ายตึกทั้งหมดให้ช่างคนดังกล่าว
-   * - หากไม่ได้ระบุ ระบบจะปรับสถานะหัวหน้าช่างของตึกนั้นเป็น 'Unassigned' และถอนชื่อออกจากช่างสนับสนุน
-   */
+
   const deleteTechnician = (id: string, replacementTechName?: string) => {
     const techToDelete = technicians.find((t) => t.id === id);
     if (!techToDelete) return;
@@ -456,7 +418,7 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
     if (replacementTechName && replacementTechName.trim()) {
       replaceTechnician(techToDelete.name, replacementTechName.trim());
     } else {
-      // หากไม่มีคนมาแทน ให้เคลียร์เป็น Unassigned
+
       setAllocations((prev) =>
         prev.map((b) => {
           if (b.leadTechnician === techToDelete.name) {
@@ -480,10 +442,7 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
     setTechnicians((prev) => prev.filter((t) => t.id !== id));
   };
 
-  /**
-   * ฟังก์ชัน getBuildingAllocation:
-   * ค้นหาข้อมูลการจัดสรรอาคารจากชื่อตึก รองรับทั้งชื่อภาษาไทยและภาษาอังกฤษ
-   */
+
   const getBuildingAllocation = (buildingName: string): BuildingAllocation | undefined => {
     if (!buildingName) return undefined;
     const clean = buildingName.toLowerCase().trim();
@@ -496,30 +455,21 @@ export const BuildingStaffProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
-  /**
-   * ฟังก์ชัน getLeadTechForBuilding:
-   * ค้นหาโปรไฟล์ของหัวหน้าช่างประจำอาคารจากชื่อตึก
-   */
+
   const getLeadTechForBuilding = (buildingName: string): TechnicianProfile | undefined => {
     const alloc = getBuildingAllocation(buildingName);
     if (!alloc) return undefined;
     return technicians.find((t) => t.name === alloc.leadTechnician);
   };
 
-  /**
-   * ฟังก์ชัน getSupportTechsForBuilding:
-   * ดึงรายการโปรไฟล์ช่างสนับสนุนทั้งหมดประจำอาคารนั้นๆ
-   */
+
   const getSupportTechsForBuilding = (buildingName: string): TechnicianProfile[] => {
     const alloc = getBuildingAllocation(buildingName);
     if (!alloc) return [];
     return technicians.filter((t) => alloc.supportTechnicians.includes(t.name));
   };
 
-  /**
-   * ฟังก์ชัน resetToDefaults:
-   * รีเซ็ตข้อมูลการจัดสรรและรายชื่อช่างทั้งหมดกลับเป็นค่าเริ่มต้น และล้าง localStorage
-   */
+
   const resetToDefaults = () => {
     setAllocations(initialBuildingAllocations);
     setTechnicians(initialTechnicians);

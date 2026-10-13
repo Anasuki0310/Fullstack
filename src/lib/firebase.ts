@@ -1,25 +1,13 @@
-/**
- * @file firebase.ts
- * @description โมดูลตั้งค่าและเชื่อมต่อ Firebase Authentication และ Google OAuth 2.0
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. กำหนดค่าเริ่มต้น Firebase App จาก `firebase-applet-config.json`
- * 2. ตั้งค่า GoogleAuthProvider พร้อมกำหนด OAuth Scopes สำหรับดึงข้อมูลโปรไฟล์และอีเมล (profile, email, openid)
- * 3. ฟังก์ชันหลัก:
- *    - `fetchGoogleUserProfile`: เรียกดึงข้อมูลโปรไฟล์จาก Google OAuth2 endpoint
- *    - `initAuth`: ตรวจจับสถานะการล็อกอิน (Auth State Observer)
- *    - `googleSignIn`: เปิดป็อปอัปสำหรับล็อกอินด้วยบัญชี Google (signInWithPopup) พร้อมดึง Access Token
- *    - `logoutUser`: ล็อกเอาต์และล้างแคช Access Token ออกจากหน่วยความจำ
- */
+
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  onAuthStateChanged, 
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged,
   signOut as firebaseSignOut,
-  User 
+  User
 } from 'firebase/auth';
 
 interface ImportMetaEnv {
@@ -46,11 +34,11 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize Firebase App safely (avoid duplicate init)
+
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Authorized OAuth Scopes
+
 export const SCOPES = [
   'https://www.googleapis.com/auth/userinfo.profile',
   'https://www.googleapis.com/auth/userinfo.email',
@@ -59,14 +47,14 @@ export const SCOPES = [
 
 export const googleProvider = new GoogleAuthProvider();
 SCOPES.forEach((scope) => googleProvider.addScope(scope));
-// Set custom parameters to always prompt account selection if desired
+
 googleProvider.setCustomParameters({
   prompt: 'select_account',
 });
 
-// Flag to track ongoing sign in flow
+
 let isSigningIn = false;
-// Cached access token in memory (never stored in localStorage/sessionStorage)
+
 let cachedAccessToken: string | null = null;
 
 export interface GoogleUserInfo {
@@ -78,12 +66,10 @@ export interface GoogleUserInfo {
   email: string;
   email_verified?: boolean;
   locale?: string;
-  hd?: string; // Hosted domain (e.g. cmu.ac.th)
+  hd?: string;
 }
 
-/**
- * Fetches Google User Profile data using the OAuth access token
- */
+
 export async function fetchGoogleUserProfile(accessToken: string): Promise<GoogleUserInfo | null> {
   try {
     const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -102,9 +88,7 @@ export async function fetchGoogleUserProfile(accessToken: string): Promise<Googl
   }
 }
 
-/**
- * Initialize auth listener with in-memory token handling
- */
+
 export const initAuth = (
   onAuthSuccess?: (user: User, token: string | null) => void,
   onAuthFailure?: () => void
@@ -114,7 +98,7 @@ export const initAuth = (
       if (cachedAccessToken) {
         if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
       } else if (!isSigningIn) {
-        // User is logged in across reloads, but access token needs fresh popup if OAuth API calls are needed
+
         if (onAuthSuccess) onAuthSuccess(user, null);
       }
     } else {
@@ -124,9 +108,7 @@ export const initAuth = (
   });
 };
 
-/**
- * Trigger Google OAuth Sign-in popup with authorized scopes
- */
+
 export const googleSignIn = async (): Promise<{
   user: User;
   accessToken: string;
@@ -144,7 +126,7 @@ export const googleSignIn = async (): Promise<{
 
     cachedAccessToken = accessToken;
 
-    // Fetch Google User Profile info
+
     const googleProfile = await fetchGoogleUserProfile(accessToken);
 
     return {
@@ -157,9 +139,7 @@ export const googleSignIn = async (): Promise<{
   }
 };
 
-/**
- * Sign out of Firebase Auth
- */
+
 export const logoutUser = async (): Promise<void> => {
   cachedAccessToken = null;
   await firebaseSignOut(auth);

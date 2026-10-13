@@ -1,20 +1,4 @@
-/**
- * @file TicketDetailsPage.tsx
- * @description หน้ารายละเอียดใบแจ้งซ่อมบำรุงเชิงลึก (Maintenance Ticket Details & Dispatch View)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. ดึงข้อมูลใบแจ้งซ่อมตาม `useParams().id` จาก TicketContext
- * 2. แสดงข้อมูลปัญหา, หมวดหมู่, ระดับความเร่งด่วน, อาคาร/ห้อง, วันที่แจ้ง, และรูปภาพประกอบหลักฐาน
- * 3. ระบบสำหรับผู้ดูแลระบบ (Admin Controls):
- *    - ปุ่มเปลี่ยนสถานะด่วน (Pending, In Progress, Completed)
- *    - แถบปรับเปอร์เซ็นต์ความคืบหน้า (Progress Slider 0 - 100%)
- *    - ระบบมอบหมายงานให้ช่าง (Assign Technician Dropdown): แนะนำหัวหน้าช่างประจำตึกนี้ให้อัตโนมัติ (Smart Lead Tech Suggestion)
- * 4. ระบบไทม์ไลน์และประวัติการทำงาน (Timeline & Comments Log):
- *    - แสดงประวัติการดำเนินการย้อนหลัง
- *    - กล่องเพิ่มบันทึกการทำงานของช่าง/แอดมิน (Add Comment Modal)
- * 5. ระบบลบใบแจ้งซ่อม (Delete Ticket Modal พร้อมยืนยัน)
- * 6. รองรับการกด Escape และคลิกพื้นที่รอบนอกเพื่อปิด Modal
- */
+
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
@@ -24,11 +8,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useRole } from '../contexts/RoleContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useBuildingStaff } from '../contexts/BuildingStaffContext';
-import { 
-  MessageSquare, 
-  Check, 
-  Phone, 
-  Mail, 
+import {
+  MessageSquare,
+  Check,
+  Phone,
+  Mail,
   MessageCircle,
   FileText,
   ArrowLeft,
@@ -68,10 +52,10 @@ export default function TicketDetailsPage() {
   const { getBuildingAllocation, getLeadTechForBuilding, technicians } = useBuildingStaff();
   const { language } = useLanguage();
   const { role } = useRole();
-  const { 
-    notifyTicketCompleted, 
-    notifyTicketStatusChange, 
-    notifyTechnicianAssigned 
+  const {
+    notifyTicketCompleted,
+    notifyTicketStatusChange,
+    notifyTechnicianAssigned
   } = useNotifications();
 
   const foundTicket = id ? getTicketById(id) : undefined;
@@ -87,8 +71,8 @@ export default function TicketDetailsPage() {
   const photos = foundTicket?.photos && foundTicket.photos.length > 0 ? foundTicket.photos : [];
   const assignedTo = foundTicket?.assignedTo || 'Unassigned';
 
-  const ticketProgress = foundTicket?.progress !== undefined 
-    ? foundTicket.progress 
+  const ticketProgress = foundTicket?.progress !== undefined
+    ? foundTicket.progress
     : (ticketStatus === 'Completed' ? 100 : ticketStatus === 'In Progress' ? 50 : 25);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -100,7 +84,7 @@ export default function TicketDetailsPage() {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // Close modals on Escape key press
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -112,7 +96,7 @@ export default function TicketDetailsPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Check allocated lead technician for this building
+
   const buildingAlloc = foundTicket?.building ? getBuildingAllocation(foundTicket.building) : getBuildingAllocation(locationStr);
   const buildingLeadTech = foundTicket?.building ? getLeadTechForBuilding(foundTicket.building) : getLeadTechForBuilding(locationStr);
 
@@ -134,7 +118,7 @@ export default function TicketDetailsPage() {
       updates.progress = 100;
     }
     updateTicket(foundTicket.id, updates);
-    
+
     if (newStatus === 'Completed') {
       notifyTicketCompleted({ ...foundTicket, status: 'Completed', progress: 100 });
       showToast(language === 'th' ? `🎉 ซ่อมเสร็จสมบูรณ์แล้ว! ส่งการแจ้งเตือนเรียบร้อยแล้ว 🔔` : `Status updated to "Completed"! Notification sent 🔔`);
@@ -253,8 +237,7 @@ export default function TicketDetailsPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Floating Toast Notification */}
+
         {toastMessage && (
           <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-sm animate-in fade-in slide-in-from-top-2 border border-slate-700">
             <Sparkles className="w-4 h-4 text-emerald-400" />
@@ -262,17 +245,15 @@ export default function TicketDetailsPage() {
           </div>
         )}
 
-        {/* Navigation Breadcrumb & Back Link */}
         <div className="flex items-center justify-between">
-          <Link 
-            to="/tickets" 
+          <Link
+            to="/tickets"
             className="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-[#0A3D91] transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             {language === 'th' ? 'กลับไปยังรายการแจ้งซ่อมทั้งหมด' : 'Back to All Tickets'}
           </Link>
 
-          {/* Admin Direct Delete Trigger Button */}
           {role === 'admin' && (
             <button
               type="button"
@@ -285,7 +266,6 @@ export default function TicketDetailsPage() {
           )}
         </div>
 
-        {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
@@ -300,7 +280,7 @@ export default function TicketDetailsPage() {
               </span>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsCommentModalOpen(true)}
             className="inline-flex items-center justify-center px-4 py-2 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 transition-colors cursor-pointer"
           >
@@ -309,7 +289,6 @@ export default function TicketDetailsPage() {
           </button>
         </div>
 
-        {/* 🛠️ Action Panel: Admin Controls (Status, Progress %, Dispatch Tech, Delete) */}
         {role === 'admin' ? (
           <div className="bg-gradient-to-r from-blue-900 via-[#0A3D91] to-indigo-900 text-white rounded-2xl p-5 shadow-md space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/15">
@@ -330,8 +309,7 @@ export default function TicketDetailsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              
-              {/* 1. Quick Status Buttons */}
+
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-blue-100 text-xs font-semibold uppercase tracking-wider">
                   <Wrench className="w-4 h-4 text-amber-300" />
@@ -350,8 +328,8 @@ export default function TicketDetailsPage() {
                         key={s.key}
                         onClick={() => handleStatusChange(s.key as TicketItem['status'])}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm ${
-                          isCurrent 
-                            ? s.active 
+                          isCurrent
+                            ? s.active
                             : 'bg-white/10 text-white/90 border border-white/20 ' + s.color
                         }`}
                       >
@@ -363,7 +341,6 @@ export default function TicketDetailsPage() {
                 </div>
               </div>
 
-              {/* 2. Progress Selector (0%, 25%, 50%, 75%, 100%) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-blue-100 text-xs font-semibold uppercase tracking-wider">
                   <div className="flex items-center gap-1.5">
@@ -374,7 +351,7 @@ export default function TicketDetailsPage() {
                     {ticketProgress}%
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-5 gap-1.5">
                   {[
                     { val: 10, label: '10%' },
@@ -402,14 +379,13 @@ export default function TicketDetailsPage() {
                 </div>
 
                 <div className="w-full bg-black/20 rounded-full h-2 overflow-hidden mt-1">
-                  <div 
+                  <div
                     className="bg-emerald-400 h-full rounded-full transition-all duration-300"
                     style={{ width: `${ticketProgress}%` }}
                   />
                 </div>
               </div>
 
-              {/* 3. Technician Dispatch & Building Allocation Link */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-blue-100 text-xs font-semibold uppercase tracking-wider">
                   <div className="flex items-center gap-1.5">
@@ -443,7 +419,6 @@ export default function TicketDetailsPage() {
                   <ChevronDown className="w-4 h-4 text-white/70 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
 
-                {/* Building Staff Recommendation Prompt */}
                 {assignedTo === 'Unassigned' && buildingLeadTech && (
                   <div className="bg-white/10 rounded-lg p-2 text-[11px] text-blue-100 flex items-center justify-between">
                     <span className="truncate">
@@ -463,7 +438,7 @@ export default function TicketDetailsPage() {
             </div>
           </div>
         ) : (
-          /* Student View Banner */
+
           ticketStatus === 'Completed' ? (
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
               <div className="flex items-start sm:items-center gap-3">
@@ -481,7 +456,7 @@ export default function TicketDetailsPage() {
                     </span>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-700 mt-1">
-                    {language === 'th' 
+                    {language === 'th'
                       ? 'งานซ่อมนี้ได้รับการแก้ไขเสร็จสิ้นเรียบร้อยแล้วโดยทีมช่างผู้เชี่ยวชาญ'
                       : 'This repair request has been successfully completed.'}
                   </p>
@@ -508,8 +483,8 @@ export default function TicketDetailsPage() {
                     </span>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-600 mt-1">
-                    {language === 'th' 
-                      ? 'คุณสามารถติดตามสถานะการดำเนินงานได้ตามไทม์ไลน์ด้านล่าง' 
+                    {language === 'th'
+                      ? 'คุณสามารถติดตามสถานะการดำเนินงานได้ตามไทม์ไลน์ด้านล่าง'
                       : 'You can monitor the repair progression below.'}
                   </p>
                 </div>
@@ -522,10 +497,8 @@ export default function TicketDetailsPage() {
           )
         )}
 
-        {/* 3-Column Grid Content Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-          {/* Left Column: Ticket Info & Live Progress */}
+
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-full">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -540,15 +513,14 @@ export default function TicketDetailsPage() {
             </div>
 
             <div className="p-6 space-y-6 flex-1">
-              
-              {/* Progress Bar Indicator */}
+
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                   <span>{language === 'th' ? 'ความคืบหน้าการซ่อมบำรุง' : 'Overall Progress'}</span>
                   <span className="text-[#0A3D91] font-bold">{ticketProgress}%</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       ticketProgress === 100 ? 'bg-emerald-500' : ticketProgress >= 50 ? 'bg-blue-600' : 'bg-amber-500'
                     }`}
@@ -556,9 +528,9 @@ export default function TicketDetailsPage() {
                   />
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  {ticketProgress === 100 
+                  {ticketProgress === 100
                     ? (language === 'th' ? 'ซ่อมแซมและทดสอบระบบเสร็จสมบูรณ์' : 'Repairs completed and verified.')
-                    : ticketProgress >= 50 
+                    : ticketProgress >= 50
                     ? (language === 'th' ? 'ช่างกำลังดำเนินการแก้ไขหน้างาน' : 'Technician on-site fixing issue.')
                     : (language === 'th' ? 'รับเรื่องและกำลังจัดส่งทีมช่าง' : 'Received, dispatching crew.')}
                 </p>
@@ -578,7 +550,7 @@ export default function TicketDetailsPage() {
                   <p className="font-medium text-slate-900">{submittedDate}</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
@@ -620,7 +592,6 @@ export default function TicketDetailsPage() {
             </div>
           </div>
 
-          {/* Middle Column: Tracking Timeline */}
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-full">
             <div className="p-6 border-b border-slate-100">
               <h3 className="font-semibold text-lg text-slate-900">
@@ -631,7 +602,6 @@ export default function TicketDetailsPage() {
               <div className="relative pl-3 mt-2">
                 <div className="absolute top-2 bottom-4 left-6 w-0.5 bg-slate-200"></div>
 
-                {/* Step 1: Ticket Created */}
                 <div className="relative flex items-start gap-4 mb-8">
                   <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center shrink-0 z-10 border-4 border-white shadow-sm mt-0.5">
                     <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
@@ -647,7 +617,6 @@ export default function TicketDetailsPage() {
                   </div>
                 </div>
 
-                {/* Step 2: Assigned */}
                 <div className="relative flex items-start gap-4 mb-8">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 z-10 border-4 border-white shadow-sm mt-0.5 ${
                     assignedTo !== 'Unassigned' ? 'bg-green-500 text-white' : 'bg-slate-300 text-slate-500'
@@ -662,14 +631,13 @@ export default function TicketDetailsPage() {
                       {assignedTo !== 'Unassigned' ? assignedTo : (language === 'th' ? 'รอดำเนินการ' : 'Pending')}
                     </p>
                     <p className="text-xs text-slate-600 mt-1">
-                      {assignedTo !== 'Unassigned' 
+                      {assignedTo !== 'Unassigned'
                         ? (language === 'th' ? `มอบหมายงานให้ ${assignedTo} เข้าตรวจรับงานแล้ว` : `Assigned to ${assignedTo}.`)
                         : (language === 'th' ? 'อยู่ระหว่างรอเจ้าหน้าที่จัดสรรช่าง' : 'Awaiting assignment.')}
                     </p>
                   </div>
                 </div>
 
-                {/* Step 3: In Progress */}
                 <div className="relative flex items-start gap-4 mb-8">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 z-10 border-4 border-white shadow-sm mt-0.5 ${
                     ticketStatus === 'In Progress' || ticketStatus === 'Completed' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'
@@ -688,7 +656,6 @@ export default function TicketDetailsPage() {
                   </div>
                 </div>
 
-                {/* Step 4: Completed */}
                 <div className="relative flex items-start gap-4">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 z-10 border-4 border-white shadow-sm mt-0.5 ${
                     ticketStatus === 'Completed' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'
@@ -711,7 +678,6 @@ export default function TicketDetailsPage() {
             </div>
           </div>
 
-          {/* Right Column: Assigned Technician & Building Context */}
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-full">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-semibold text-lg text-slate-900">
@@ -742,7 +708,6 @@ export default function TicketDetailsPage() {
                 </div>
               </div>
 
-              {/* Building Context Info */}
               {buildingAlloc && (
                 <div className="w-full bg-blue-50/70 border border-blue-100 rounded-xl p-3 text-left text-xs mb-4">
                   <div className="flex items-center gap-1.5 text-blue-900 font-bold mb-1">
@@ -759,7 +724,7 @@ export default function TicketDetailsPage() {
               )}
 
               <div className="mt-auto w-full pt-2">
-                <button 
+                <button
                   onClick={() => setIsCommentModalOpen(true)}
                   className="w-full flex items-center justify-center px-4 py-2.5 border-2 border-[#0A3D91] rounded-lg text-xs font-bold text-[#0A3D91] hover:bg-[#0A3D91] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A3D91] cursor-pointer"
                 >
@@ -772,7 +737,6 @@ export default function TicketDetailsPage() {
 
         </div>
 
-        {/* Comments Section */}
         {comments.length > 0 && (
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
             <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -793,9 +757,8 @@ export default function TicketDetailsPage() {
           </div>
         )}
 
-        {/* Modal: Delete Confirmation */}
         {isDeleteModalOpen && (
-          <div 
+          <div
             onClick={(e) => { if (e.target === e.currentTarget) setIsDeleteModalOpen(false); }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
           >
@@ -809,7 +772,7 @@ export default function TicketDetailsPage() {
                     {language === 'th' ? 'ยืนยันการลบคำร้องแจ้งซ่อม?' : 'Delete Maintenance Ticket?'}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    {language === 'th' 
+                    {language === 'th'
                       ? `คุณกำลังจะลบคำร้อง #${ticketId} "${descriptionStr}" ออกจากระบบถาวร ข้อมูลและการติดตามทั้งหมดจะถูกลบ`
                       : `Are you sure you want to permanently delete ticket #${ticketId}? This action cannot be undone.`}
                   </p>
@@ -837,9 +800,8 @@ export default function TicketDetailsPage() {
           </div>
         )}
 
-        {/* Comment Modal */}
         {isCommentModalOpen && (
-          <div 
+          <div
             onClick={(e) => { if (e.target === e.currentTarget) setIsCommentModalOpen(false); }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
           >

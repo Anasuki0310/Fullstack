@@ -1,21 +1,4 @@
-/**
- * @file SubmitRequestPage.tsx
- * @description หน้านิสิตและบุคลากรส่งคำร้องแจ้งซ่อมใหม่ (Submit Maintenance Request Form)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. ฟอร์มกรอกข้อมูลแจ้งซ่อมสำหรับนิสิตและผู้ใช้งาน:
- *    - เลือกอาคารในคณะวิศวกรรมศาสตร์และวิทยาเขต (Building Dropdown)
- *    - ระบบแนะนำหัวหน้าช่างประจำอาคารที่รับผิดชอบโดยอัตโนมัติ (Assigned Lead Technician Banner)
- *    - กรอกชั้น (Floor) และเลขห้อง (Room)
- *    - เลือกหมวดหมู่งานซ่อม (Category: HVAC, Plumbing, Electrical, Carpentry, Cleaning, General)
- *    - เลือกระดับความเร่งด่วน (Priority: Urgent, High, Medium, Low)
- *    - กรอกรายละเอียดปัญหา (Description)
- * 2. ระบบแนบรูปภาพความเสียหาย (Photo Upload & Camera Capture):
- *    - อัปโหลดไฟล์รูปภาพจากเครื่อง (Upload from Device)
- *    - ถ่ายภาพสดจากกล้องอุปกรณ์ผ่าน CameraCaptureModal (Capture from Camera)
- *    - จำกัดการแนบรูปสูงสุด 3 รูป พร้อมพรีวิวและปุ่มลบรูป
- * 3. บันทึกคำร้องเข้าสู่ TicketContext และเด้ง Toast แจ้งเตือนความสำเร็จ ก่อนนำทางไปหน้ารายการตั๋ว
- */
+
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -70,7 +53,7 @@ export default function SubmitRequestPage() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Clean up object URLs on component unmount
+
   useEffect(() => {
     return () => {
       images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
@@ -174,10 +157,10 @@ export default function SubmitRequestPage() {
     const contactPhone = (formData.get('phone') as string) || '081-234-5678';
     const contactEmail = (formData.get('email') as string) || email || 'student@cmu.ac.th';
 
-    // Construct new ticket object containing actual input values (Building, Floor, Room, Category)
-    // Add submittedDate property using current date (new Date().toLocaleDateString())
-    // Add status property set to 'Pending' by default
-    // Append this new ticket object to the global ticket state right before triggering the success toast and redirecting
+
+
+
+
     addTicket({
       building,
       floor,
@@ -202,29 +185,24 @@ export default function SubmitRequestPage() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
-        
-        {/* Page Header */}
+
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{language === 'th' ? 'แบบฟอร์มแจ้งซ่อมแซม' : 'University Maintenance Request'}</h2>
           <p className="text-sm text-slate-500 mt-1">{language === 'th' ? 'กรุณากรอกแบบฟอร์มด้านล่างเพื่อแจ้งปัญหา' : 'Please fill out the form below to report a maintenance issue on campus.'}</p>
         </div>
 
-        {/* Form Card */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <form className="p-6 md:p-8 space-y-8" onSubmit={handleSubmit}>
-            
-            {/* Core fields */}
+
             <div className="space-y-6">
-              
-              {/* Location: 3-column grid layout */}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Column 1: Building (Dropdown Select) */}
                 <div className="space-y-2">
                   <label htmlFor="building" className="block text-sm font-medium text-slate-700">
                     {language === 'th' ? 'อาคาร' : 'Building'} <span className="text-red-500">*</span>
                   </label>
-                  <select 
-                    id="building" 
+                  <select
+                    id="building"
                     name="building"
                     value={selectedBuilding}
                     onChange={(e) => setSelectedBuilding(e.target.value)}
@@ -242,7 +220,6 @@ export default function SubmitRequestPage() {
                   </select>
                 </div>
 
-                {/* Column 2: Floor (Input Field) */}
                 <div className="space-y-2">
                   <label htmlFor="floor" className="block text-sm font-medium text-slate-700">
                     {language === 'th' ? 'ชั้น' : 'Floor'} <span className="text-red-500">*</span>
@@ -257,7 +234,6 @@ export default function SubmitRequestPage() {
                   />
                 </div>
 
-                {/* Column 3: Room Number (Input Field) */}
                 <div className="space-y-2">
                   <label htmlFor="room" className="block text-sm font-medium text-slate-700">
                     {language === 'th' ? 'ห้อง' : 'Room'} <span className="text-red-500">*</span>
@@ -273,7 +249,6 @@ export default function SubmitRequestPage() {
                 </div>
               </div>
 
-              {/* Building Staff Allocation Info Box */}
               {selectedBuilding && getBuildingAllocation(selectedBuilding) && (
                 <div className="bg-blue-50/80 border border-blue-200 rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-blue-950 animate-in fade-in">
                   <div className="flex items-center gap-2.5">
@@ -296,13 +271,12 @@ export default function SubmitRequestPage() {
                 </div>
               )}
 
-              {/* Category */}
               <div className="space-y-2">
                 <label htmlFor="category" className="block text-sm font-medium text-slate-700">
                   {language === 'th' ? 'หมวดหมู่งานซ่อม' : 'Issue Category'} <span className="text-red-500">*</span>
                 </label>
-                <select 
-                  id="category" 
+                <select
+                  id="category"
                   name="category"
                   className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] disabled:cursor-not-allowed disabled:opacity-50"
                   defaultValue=""
@@ -318,7 +292,6 @@ export default function SubmitRequestPage() {
                 </select>
               </div>
 
-              {/* Description */}
               <div className="space-y-2">
                 <label htmlFor="description" className="block text-sm font-medium text-slate-700">
                   {language === 'th' ? 'รายละเอียดปัญหา' : 'Issue Description'} <span className="text-red-500">*</span>
@@ -333,7 +306,6 @@ export default function SubmitRequestPage() {
                 />
               </div>
 
-              {/* Upload Photos */}
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
@@ -375,7 +347,6 @@ export default function SubmitRequestPage() {
                   </div>
                 </div>
 
-                {/* Hidden File Input */}
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -384,8 +355,7 @@ export default function SubmitRequestPage() {
                   accept="image/jpeg, image/png, image/heic"
                   className="hidden"
                 />
-                
-                {/* Drag and Drop Zone with Camera Quick Action */}
+
                 <div
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
@@ -427,7 +397,6 @@ export default function SubmitRequestPage() {
                   </p>
                 </div>
 
-                {/* Dynamic Image Previews */}
                 {images.length > 0 && (
                   <div className="flex flex-wrap gap-4 mt-4 pt-1">
                     {images.map((img) => (
@@ -467,7 +436,6 @@ export default function SubmitRequestPage() {
               </div>
             </div>
 
-            {/* Contact Information */}
             <div className="pt-6 mt-6 border-t border-slate-200">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900">
@@ -523,7 +491,6 @@ export default function SubmitRequestPage() {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 pt-6 border-t border-slate-200">
               <button
                 type="button"
@@ -543,7 +510,6 @@ export default function SubmitRequestPage() {
         </div>
       </div>
 
-      {/* Camera Capture Modal */}
       <CameraCaptureModal
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}

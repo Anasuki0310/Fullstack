@@ -39,7 +39,7 @@ export default function CMUCallbackPage() {
 
         const config = getCMUAuthConfig();
         const exchangeResult = await exchangeCMUCode(code, config.redirectUri);
-        
+
         let fetchedUser = exchangeResult.success && exchangeResult.user ? exchangeResult.user : null;
 
         if (!fetchedUser) {
