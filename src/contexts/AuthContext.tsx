@@ -289,7 +289,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (googleProfile?.picture) return googleProfile.picture;
     if (firebaseUser?.photoURL) return firebaseUser.photoURL;
-    return 'https://i.pravatar.cc/150?u=a042581f4e29026704d';
+    // รูปอวตารมาตรฐานแบบไม่มีรูป (Default Silhouette)
+return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><rect width="128" height="128" fill="%23E2E8F0"/><circle cx="64" cy="46" r="24" fill="%2394A3B8"/><path d="M24 114c0-22 18-38 40-38s40 16 40 38" fill="%2394A3B8"/></svg>';
   }, [customData.photoURL, googleProfile, firebaseUser]);
 
   const studentId = useMemo(() => {

@@ -261,8 +261,8 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* 1. CMU OAuth Button (Primary University Login) */}
-          <div className="space-y-2 mb-3">
+          {/* 1. เข้าสู่ระบบด้วย CMU Account */}
+          <div className="mb-3">
             <button
               type="button"
               onClick={handleCmuOAuthLogin}
@@ -272,43 +272,7 @@ export default function LoginPage() {
                 🐘
               </div>
               <span>เข้าสู่ระบบด้วย CMU Account</span>
-              <span className="ml-2 text-[11px] bg-white/20 text-purple-100 px-1.5 py-0.5 rounded font-mono">
-                OAuth
-              </span>
             </button>
-
-            {/* ปุ่มล็อกอินด่วน 1 คลิกในหน้านี้ทันที */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={handleQuickStudentLogin}
-                className="py-2 px-2.5 rounded-xl border border-purple-200 bg-purple-50/80 hover:bg-purple-100 text-purple-900 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-              >
-                <GraduationCap className="w-3.5 h-3.5 text-purple-700" />
-                <span>นักศึกษา (1 คลิก)</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleQuickAdminLogin}
-                className="py-2 px-2.5 rounded-xl border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-900 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-indigo-700" />
-                <span>แอดมิน (1 คลิก)</span>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between px-1 text-xs pt-0.5">
-              <span className="truncate max-w-[240px] text-[11px] text-slate-500">
-                กลุ่ม CPE: <strong className="text-purple-700 font-semibold">{cmuConfig.redirectUri.replace('https://', '').split('/')[0]}</strong>
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowCmuModal(true)}
-                className="text-[11px] text-purple-700 hover:text-purple-900 font-bold underline cursor-pointer"
-              >
-                สลับกลุ่ม / วาง Code
-              </button>
-            </div>
           </div>
 
           {/* 2. Google Login Button */}
@@ -316,12 +280,12 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading}
-            className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 transition-colors disabled:opacity-75 cursor-pointer"
+            className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 rounded-xl shadow-sm bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200 transition-colors disabled:opacity-75 cursor-pointer"
           >
             {isGoogleLoading ? (
               <div className="flex items-center gap-2 text-slate-600">
                 <Loader2 className="w-5 h-5 animate-spin text-[#0A3D91]" />
-                <span>Authorizing with Google...</span>
+                <span>กำลังเชื่อมต่อ Google...</span>
               </div>
             ) : (
               <>
@@ -332,7 +296,7 @@ export default function LoginPage() {
                   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
                   <path fill="none" d="M0 0h48v48H0z"></path>
                 </svg>
-                Sign in with Google
+                <span>เข้าสู่ระบบด้วย Google</span>
               </>
             )}
           </button>
@@ -340,7 +304,7 @@ export default function LoginPage() {
           {/* 3. Divider */}
           <div className="relative flex py-6 items-center">
             <div className="flex-grow border-t border-slate-200"></div>
-            <span className="flex-shrink-0 mx-4 text-slate-400 text-xs uppercase tracking-wider font-medium">OR continue with email</span>
+            <span className="flex-shrink-0 mx-4 text-slate-400 text-xs uppercase tracking-wider font-medium">หรือ เข้าสู่ระบบด้วยอีเมล</span>
             <div className="flex-grow border-t border-slate-200"></div>
           </div>
 
@@ -420,47 +384,11 @@ export default function LoginPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#0A3D91] hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A3D91] transition-colors mt-2"
+              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-[#0A3D91] hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A3D91] transition-all mt-2 cursor-pointer"
             >
-              Log In
+              ล็อกอิน
             </button>
           </form>
-
-          {/* Quick Demo Accounts Selection */}
-          <div className="mt-6 pt-5 border-t border-slate-100">
-            <span className="block text-center text-xs uppercase tracking-wider font-bold text-slate-400 mb-3">
-              ⚡ บัญชีทดสอบระบบ (Quick Demo Access)
-            </span>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={handleQuickAdminLogin}
-                className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-900 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-              >
-                <ShieldCheck className="w-4 h-4 text-purple-600" />
-                <span>เข้าสู่ระบบ แอดมิน (Admin)</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleQuickStudentLogin}
-                className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[#0A3D91] text-xs font-bold transition-all shadow-2xs cursor-pointer"
-              >
-                <GraduationCap className="w-4 h-4 text-[#0A3D91]" />
-                <span>เข้าสู่ระบบ นักศึกษา (Student)</span>
-              </button>
-            </div>
-            <p className="text-[11px] text-center text-slate-400 mt-2">
-              Admin: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600">bimcub12345@cmu.ac.th</code> | รหัส: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600">123456</code>
-            </p>
-          </div>
-
-          {/* 4. Registration Section */}
-          <div className="mt-8 text-center text-sm">
-            <span className="text-slate-500">Don't have an account? </span>
-            <a href="#" className="font-medium text-[#0A3D91] hover:text-blue-800 transition-colors">
-              Register Here
-            </a>
-          </div>
         </motion.div>
       </div>
 

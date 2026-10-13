@@ -1,18 +1,6 @@
-/**
- * @file CMUCallbackPage.tsx
- * @description หน้ารองรับการเปลี่ยนเส้นทางกลับหลังจากการยืนยันตัวตน CMU OAuth (CMU OAuth Callback Handler)
- * 
- * หน้าที่ของไฟล์นี้:
- * 1. อ่านค่า Authorization Code (`?code=...`) และ `state` จาก URL Query String
- * 2. ส่ง Code ไปแลกเปลี่ยนเป็น Access Token และดึงข้อมูลนักศึกษา/บุคลากร CMU
- * 3. บันทึกข้อมูลเข้าสู่ระบบผ่าน `signInWithCmu()` ใน `AuthContext`
- * 4. สลับหน้าไปยัง `/dashboard` (สำหรับเจ้าหน้าที่/แอดมิน) หรือ `/tickets` (สำหรับนักศึกษา) โดยอัตโนมัติ
- * 5. แสดงสถานะข้อผิดพลาดพร้อมปุ่มย้อนกลับหากการยืนยันตัวตนไม่สำเร็จ
- */
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ShieldCheck, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { MOCK_CMU_ACCOUNTS, isCMUStaff, getCMUAuthConfig, exchangeCMUCode } from '../lib/cmuOAuth';
 
@@ -22,8 +10,13 @@ export default function CMUCallbackPage() {
   const { signInWithCmu } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [targetPath, setTargetPath] = useState<string>('/tickets');
+  const hasHandledRef = useRef(false);
 
   useEffect(() => {
+    if (hasHandledRef.current) return;
+    hasHandledRef.current = true;
+
     const handleOAuthCallback = async () => {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
@@ -49,21 +42,27 @@ export default function CMUCallbackPage() {
         
         let fetchedUser = exchangeResult.success && exchangeResult.user ? exchangeResult.user : null;
 
-        // หากไม่มีข้อมูลจาก server (เช่น ในโหมดพรีวิวหรือทดสอบ)
-        // จำลองการดึงโปรไฟล์นักศึกษา มช. จากบัญชีทดสอบเริ่มต้น
         if (!fetchedUser) {
           fetchedUser = MOCK_CMU_ACCOUNTS[0];
         }
 
-        // ล็อกอินเข้าสู่ระบบ
         signInWithCmu(fetchedUser);
         setStatus('success');
 
-        // นำทางไปยังหน้าที่เหมาะสมตามสิทธิ์ของผู้ใช้
         const isAdmin = isCMUStaff(fetchedUser);
-        setTimeout(() => {
-          navigate(isAdmin ? '/dashboard' : '/tickets', { replace: true });
-        }, 1200);
+        const destination = isAdmin ? '/dashboard' : '/tickets';
+        setTargetPath(destination);
+
+        const timer = setTimeout(() => {
+          navigate(destination, { replace: true });
+          setTimeout(() => {
+            if (window.location.pathname.includes('callback')) {
+              window.location.href = destination;
+            }
+          }, 800);
+        }, 800);
+
+        return () => clearTimeout(timer);
 
       } catch (err: unknown) {
         setStatus('error');
@@ -74,8 +73,17 @@ export default function CMUCallbackPage() {
     handleOAuthCallback();
   }, [searchParams, navigate, signInWithCmu]);
 
+  const handleManualProceed = () => {
+    navigate(targetPath, { replace: true });
+    setTimeout(() => {
+      if (window.location.pathname.includes('callback')) {
+        window.location.href = targetPath;
+      }
+    }, 200);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200/80 p-8 text-center">
         {status === 'loading' && (
           <div className="space-y-4">
@@ -92,16 +100,29 @@ export default function CMUCallbackPage() {
         )}
 
         {status === 'success' && (
-          <div className="space-y-4">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto">
+          <div className="space-y-5">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
               <ShieldCheck className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-bold text-emerald-700">
-              เข้าสู่ระบบด้วย CMU Account สำเร็จ!
-            </h2>
-            <p className="text-sm text-slate-500">
-              ยืนยันตัวตนเรียบร้อย กำลังนำคุณเข้าสู่ระบบจัดการงานซ่อมบำรุง...
-            </p>
+            <div className="space-y-1.5">
+              <h2 className="text-xl font-bold text-emerald-700">
+                เข้าสู่ระบบด้วย CMU Account สำเร็จ!
+              </h2>
+              <p className="text-xs text-slate-500">
+                ยืนยันตัวตนเรียบร้อย กำลังนำคุณเข้าสู่ระบบจัดการงานซ่อมบำรุง...
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handleManualProceed}
+                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-sm"
+              >
+                <span>กดที่นี่เพื่อเข้าสู่ระบบทันที ({targetPath === '/dashboard' ? 'หน้าแดชบอร์ด' : 'หน้ารายการแจ้งซ่อม'})</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
@@ -119,7 +140,7 @@ export default function CMUCallbackPage() {
             <div className="pt-2">
               <button
                 onClick={() => navigate('/')}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-xl transition-colors text-sm"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-xl transition-colors text-sm cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 กลับสู่หน้าเข้าสู่ระบบ

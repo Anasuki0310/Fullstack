@@ -21,7 +21,14 @@ import {
   signOut as firebaseSignOut,
   User 
 } from 'firebase/auth';
-import firebaseConfig from '../../firebase-applet-config.json';
+const firebaseConfig = {
+  apiKey: "AIzaSyD-placeholder-local",
+  authDomain: "maintenance-portal.firebaseapp.com",
+  projectId: "maintenance-portal",
+  storageBucket: "maintenance-portal.appspot.com",
+  messagingSenderId: "100000000000",
+  appId: "1:100000000000:web:1234567890abcdef"
+};
 
 // Initialize Firebase App safely (avoid duplicate init)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
