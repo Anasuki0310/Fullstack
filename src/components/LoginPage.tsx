@@ -223,7 +223,7 @@ export default function LoginPage() {
           alt="University Campus"
           className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A3D91] to-transparent opacity-80"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-[#0A3D91] to-transparent opacity-80"></div>
         
         <div className="relative z-10 px-12 lg:px-24 flex flex-col justify-center h-full w-full">
           <motion.div
@@ -266,7 +266,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleCmuOAuthLogin}
-              className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl shadow-sm bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all cursor-pointer group"
+              className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl shadow-sm bg-linear-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all cursor-pointer group"
             >
               <div className="w-5 h-5 mr-2.5 flex items-center justify-center bg-white/20 rounded-full text-xs font-bold">
                 🐘
@@ -303,9 +303,9 @@ export default function LoginPage() {
 
           {/* 3. Divider */}
           <div className="relative flex py-6 items-center">
-            <div className="flex-grow border-t border-slate-200"></div>
-            <span className="flex-shrink-0 mx-4 text-slate-400 text-xs uppercase tracking-wider font-medium">หรือ เข้าสู่ระบบด้วยอีเมล</span>
-            <div className="flex-grow border-t border-slate-200"></div>
+            <div className="grow border-t border-slate-200"></div>
+            <span className="shrink-0 mx-4 text-slate-400 text-xs uppercase tracking-wider font-medium">หรือ เข้าสู่ระบบด้วยอีเมล</span>
+            <div className="grow border-t border-slate-200"></div>
           </div>
 
           {/* Error message alert */}
@@ -403,7 +403,7 @@ export default function LoginPage() {
               className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full max-h-[90vh] overflow-y-auto"
             >
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-purple-800 to-indigo-900 text-white p-5 rounded-t-2xl flex items-center justify-between">
+              <div className="bg-linear-to-r from-purple-800 to-indigo-900 text-white p-5 rounded-t-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
                     🐘
@@ -454,7 +454,7 @@ export default function LoginPage() {
                 {/* แท็บ 1: เข้าสู่ระบบ CMU ทันที */}
                 {cmuModalTab === 'login' && (
                   <div className="space-y-4 pt-1">
-                    <form onSubmit={handleDirectCmuLogin} className="space-y-3.5 bg-gradient-to-b from-purple-50/50 to-white p-4 rounded-xl border border-purple-100">
+                    <form onSubmit={handleDirectCmuLogin} className="space-y-3.5 bg-linear-to-b from-purple-50/50 to-white p-4 rounded-xl border border-purple-100">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
                           CMU IT Account หรือ รหัสนักศึกษา:
