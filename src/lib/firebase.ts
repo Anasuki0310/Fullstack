@@ -1,3 +1,17 @@
+/**
+ * @file firebase.ts
+ * @description โมดูลตั้งค่าและเชื่อมต่อ Firebase Authentication และ Google OAuth 2.0
+ * 
+ * หน้าที่ของไฟล์นี้:
+ * 1. กำหนดค่าเริ่มต้น Firebase App จาก `firebase-applet-config.json`
+ * 2. ตั้งค่า GoogleAuthProvider พร้อมกำหนด OAuth Scopes สำหรับดึงข้อมูลโปรไฟล์และอีเมล (profile, email, openid)
+ * 3. ฟังก์ชันหลัก:
+ *    - `fetchGoogleUserProfile`: เรียกดึงข้อมูลโปรไฟล์จาก Google OAuth2 endpoint
+ *    - `initAuth`: ตรวจจับสถานะการล็อกอิน (Auth State Observer)
+ *    - `googleSignIn`: เปิดป็อปอัปสำหรับล็อกอินด้วยบัญชี Google (signInWithPopup) พร้อมดึง Access Token
+ *    - `logoutUser`: ล็อกเอาต์และล้างแคช Access Token ออกจากหน่วยความจำ
+ */
+
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 

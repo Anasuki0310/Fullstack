@@ -69,3 +69,65 @@
 ├── package.json                    # ข้อมูล Dependencies และสคริปต์
 ├── tsconfig.json                   # การตั้งค่า TypeScript
 └── vite.config.ts                  # การตั้งค่าการทำงานของ Vite
+```
+
+---
+
+## 🚀 ขั้นตอนการติดตั้งและเริ่มใช้งาน (Getting Started)
+
+### 1. ความต้องการของระบบ (Prerequisites)
+- [Node.js](https://nodejs.org/) (เวอร์ชัน 18.0.0 ขึ้นไป)
+- [Git](https://git-scm.com/)
+
+---
+
+### 2. โคลนโปรเจกต์ (Clone Repository)
+```bash
+git clone https://github.com/your-username/your-repository-name.git
+cd your-repository-name
+```
+
+---
+
+### 3. ติดตั้ง Dependencies
+```bash
+npm install
+```
+
+---
+
+### 4. สั่งรันโปรเจกต์ (Run Development Server)
+```bash
+npm run dev
+```
+
+เปิดเว็บเบราว์เซอร์ไปที่:
+👉 **`http://localhost:3000`** (หรือ URL ที่แสดงขึ้นบน Terminal)
+
+---
+
+## 💻 คำสั่งสคริปต์ที่ใช้งานได้ (Available Scripts)
+
+- `npm run dev` : เริ่มรัน Local Development Server (รองรับ Fast Refresh)
+- `npm run build` : ทำการ Compile TypeScript และสร้างไฟล์ Production ในโฟลเดอร์ `dist/`
+- `npm run preview` : ทดสอบรันหน้าเว็บจากไฟล์ Production Build
+- `npm run lint` : ตรวจสอบความถูกต้องของโค้ด TypeScript (`tsc --noEmit`)
+
+---
+
+## 📱 การจัดการข้อมูล (Data & State Management)
+
+ตัวโปรเจกต์ใช้ **React Context API** (`src/contexts/TicketContext.tsx`) ในการเป็น Single Source of Truth:
+- **ข้อมูลเริ่มต้น (Initial Mock Data):** มีข้อมูลจำลองงานซ่อมหลากหลายประเภทเตรียมไว้ให้พร้อมใช้งาน
+- **Client Storage:** ทุกการเพิ่มใบแจ้งซ่อมใหม่ (`addTicket`) หรือการเปลี่ยนสถานะ (`updateTicket`) จะบันทึกลงใน `localStorage` ของเบราว์เซอร์อัตโนมัติ ทำให้ผู้ตรวจหรืออาจารย์สามารถทดสอบการทำงานได้อย่างสมบูรณ์
+
+---
+
+## 👥 ผู้พัฒนา (Author)
+- **ผู้พัฒนา:** นักศึกษาผู้จัดทำโครงการ
+- **ติดต่อ:** anatsapong0310@gmail.com
+
+---
+
+## 📄 ใบอนุญาต (License)
+โปรเจกต์นี้ได้รับอนุญาตให้ใช้งานภายใต้ใบอนุญาต [MIT License](LICENSE)

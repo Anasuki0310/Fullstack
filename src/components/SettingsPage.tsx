@@ -1,3 +1,20 @@
+/**
+ * @file SettingsPage.tsx
+ * @description หน้าตั้งค่าระบบและโปรไฟล์ผู้ใช้งาน (User Profile & System Preferences Page)
+ * 
+ * หน้าที่ของไฟล์นี้:
+ * 1. แท็บข้อมูลโปรไฟล์ (Tab: โปรไฟล์ผู้ใช้ / Profile Tab):
+ *    - อัปโหลดหรือเปลี่ยนรูปภาพโปรไฟล์ (Custom Avatar Upload)
+ *    - แก้ไขชื่อ-นามสกุล, รหัสนิสิต, คณะ, และสาขาวิชา พร้อมบันทึกลง AuthContext
+ *    - ตรวจสอบสถานะการเชื่อมต่อบัญชี Google (Google Account Linked Badge)
+ *    - ปุ่มรีเซ็ตข้อมูลโปรไฟล์กลับเป็นค่าเดิมของ Google (Reset to Google Profile)
+ * 2. แท็บการตั้งค่าระบบ (Tab: การตั้งค่าและการแจ้งเตือน / Preferences Tab):
+ *    - ตั้งค่าภาษาแสดงผลของระบบ (สลับระหว่าง ภาษาไทย 'th' และ English 'en')
+ *    - สวิตช์เปิด-ปิดการแจ้งเตือนทางอีเมล (Email Notifications)
+ *    - สวิตช์เปิด-ปิดการแจ้งเตือนทาง LINE (LINE Alerts)
+ *    - ตั้งค่าธีมการแสดงผล (Light / Dark / System)
+ */
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from './DashboardLayout';
 import { Camera, Bell, Palette, Globe, MessageCircle, CheckCircle2, ShieldCheck, Key, RefreshCw, ExternalLink } from 'lucide-react';

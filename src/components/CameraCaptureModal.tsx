@@ -1,3 +1,19 @@
+/**
+ * @file CameraCaptureModal.tsx
+ * @description คอมโพเนนต์โมดัลเปิดกล้องถ่ายภาพความเสียหายจากอุปกรณ์ (Direct Device Camera Capture Modal)
+ * 
+ * หน้าที่ของไฟล์นี้:
+ * 1. เชื่อมต่อกล้องของอุปกรณ์โดยตรงผ่าน Web MediaDevices API (`navigator.mediaDevices.getUserMedia`)
+ * 2. รองรับการสลับกล้องหน้าและกล้องหลัง (`facingMode: 'environment' | 'user'`) เหมาะสำหรับสมาร์ทโฟน
+ * 3. แสดง Live Video Stream บนหน้าจอพร้อมกรอบเล็งถ่ายภาพ (Viewfinder UI)
+ * 4. ฟังก์ชันกดชัตเตอร์ถ่ายภาพ (Capture Snapshot):
+ *    - วาดเฟรมปัจจุบันจาก `<video>` ลงบน `<canvas>` เพื่อแปลงเป็นไฟล์รูปภาพ JPEG (`image/jpeg`)
+ *    - มีเอฟเฟกต์แฟลชขาวบนหน้าจอตอนกดชัตเตอร์ (Flash Animation)
+ * 5. หน้าพรีวิวรูปภาพที่ถ่ายได้ พร้อมปุ่ม "ถ่ายใหม่" (Retake) และปุ่ม "ใช้รูปนี้" (Confirm)
+ * 6. ระบบจัดการ Error ที่ครอบคลุม (เช่น ผู้ใช้ปฏิเสธสิทธิ์เข้าถึงกล้อง, ไม่พบอุปกรณ์กล้อง)
+ * 7. เคลียร์ MediaStream Tracks อัตโนมัติเมื่อปิด Modal เพื่อไม่ให้กล้องเปิดค้าง
+ */
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, RefreshCw, X, Check, RotateCcw, AlertCircle, SwitchCamera } from 'lucide-react';
 
@@ -178,7 +194,10 @@ export default function CameraCaptureModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+    >
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}

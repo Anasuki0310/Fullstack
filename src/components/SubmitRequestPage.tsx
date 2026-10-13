@@ -1,3 +1,22 @@
+/**
+ * @file SubmitRequestPage.tsx
+ * @description หน้านิสิตและบุคลากรส่งคำร้องแจ้งซ่อมใหม่ (Submit Maintenance Request Form)
+ * 
+ * หน้าที่ของไฟล์นี้:
+ * 1. ฟอร์มกรอกข้อมูลแจ้งซ่อมสำหรับนิสิตและผู้ใช้งาน:
+ *    - เลือกอาคารในคณะวิศวกรรมศาสตร์และวิทยาเขต (Building Dropdown)
+ *    - ระบบแนะนำหัวหน้าช่างประจำอาคารที่รับผิดชอบโดยอัตโนมัติ (Assigned Lead Technician Banner)
+ *    - กรอกชั้น (Floor) และเลขห้อง (Room)
+ *    - เลือกหมวดหมู่งานซ่อม (Category: HVAC, Plumbing, Electrical, Carpentry, Cleaning, General)
+ *    - เลือกระดับความเร่งด่วน (Priority: Urgent, High, Medium, Low)
+ *    - กรอกรายละเอียดปัญหา (Description)
+ * 2. ระบบแนบรูปภาพความเสียหาย (Photo Upload & Camera Capture):
+ *    - อัปโหลดไฟล์รูปภาพจากเครื่อง (Upload from Device)
+ *    - ถ่ายภาพสดจากกล้องอุปกรณ์ผ่าน CameraCaptureModal (Capture from Camera)
+ *    - จำกัดการแนบรูปสูงสุด 3 รูป พร้อมพรีวิวและปุ่มลบรูป
+ * 3. บันทึกคำร้องเข้าสู่ TicketContext และเด้ง Toast แจ้งเตือนความสำเร็จ ก่อนนำทางไปหน้ารายการตั๋ว
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -6,7 +25,9 @@ import { CloudUpload, X, Camera, Upload } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTickets } from '../contexts/TicketContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useBuildingStaff } from '../contexts/BuildingStaffContext';
 import CameraCaptureModal from './CameraCaptureModal';
+import { Building2, UserCheck, ShieldCheck } from 'lucide-react';
 
 interface UploadedImage {
   id: string;
@@ -42,7 +63,9 @@ export default function SubmitRequestPage() {
   const navigate = useNavigate();
   const { addTicket } = useTickets();
   const { displayName, email, isGoogleUser } = useAuth();
+  const { getBuildingAllocation } = useBuildingStaff();
 
+  const [selectedBuilding, setSelectedBuilding] = useState<string>('');
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -203,8 +226,9 @@ export default function SubmitRequestPage() {
                   <select 
                     id="building" 
                     name="building"
+                    value={selectedBuilding}
+                    onChange={(e) => setSelectedBuilding(e.target.value)}
                     className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] disabled:cursor-not-allowed disabled:opacity-50"
-                    defaultValue=""
                     required
                   >
                     <option value="" disabled>
@@ -248,6 +272,29 @@ export default function SubmitRequestPage() {
                   />
                 </div>
               </div>
+
+              {/* Building Staff Allocation Info Box */}
+              {selectedBuilding && getBuildingAllocation(selectedBuilding) && (
+                <div className="bg-blue-50/80 border border-blue-200 rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-blue-950 animate-in fade-in">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 bg-[#0A3D91] text-white rounded-lg">
+                      <Building2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-800">
+                        {language === 'th' ? 'ช่างผู้รับผิดชอบหลักประจำอาคารนี้:' : 'Assigned Lead Technician:'}{' '}
+                        <strong className="text-[#0A3D91]">{getBuildingAllocation(selectedBuilding)?.leadTechnician}</strong>
+                      </span>
+                      <span className="text-[11px] text-slate-500 block">
+                        {language === 'th' ? 'เบอร์ติดต่อ:' : 'Phone:'} {getBuildingAllocation(selectedBuilding)?.leadTechnicianPhone} | {getBuildingAllocation(selectedBuilding)?.notes}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md self-start sm:self-center border border-blue-200">
+                    {getBuildingAllocation(selectedBuilding)?.zone}
+                  </span>
+                </div>
+              )}
 
               {/* Category */}
               <div className="space-y-2">

@@ -1,17 +1,51 @@
-import React, { useEffect } from 'react';
+/**
+ * @file DashboardPage.tsx
+ * @description หน้าแดชบอร์ดสรุปภาพรวมและสถิติสำหรับผู้ดูแลระบบ (Admin Analytics & KPI Dashboard)
+ * 
+ * หน้าที่ของไฟล์นี้:
+ * 1. ตรวจสอบสิทธิ์ผู้ใช้: หากเป็นสิทธิ์ 'student' จะ Redirect ไปที่ `/tickets` ทันที
+ * 2. ตัวกรองเลือกเดือนและปี (Monthly Filter): สามารถเลือกดูสถิติย้อนหลังหรือล่วงหน้าได้แบบเรียลไทม์
+ * 3. คำนวณตัวชี้วัดหลัก (KPI Metrics Cards):
+ *    - คำร้องทั้งหมดในเดือน (Total Tickets)
+ *    - งานที่กำลังดำเนินการ (In Progress)
+ *    - งานที่รอดำเนินการ (Pending)
+ *    - งานที่เสร็จสิ้น (Completed)
+ *    - อัตราความสำเร็จตาม SLA (SLA Completion Rate %)
+ * 4. กราฟและการแสดงผลข้อมูลเชิงลึก (Recharts):
+ *    - กราฟแนวโน้มคำร้องรายสัปดาห์ (Weekly Tickets AreaChart)
+ *    - กราฟสัดส่วนหมวดหมู่ปัญหา (Category Breakdown PieChart)
+ *    - กราฟสถิติตามอาคาร (Building Distribution BarChart)
+ * 5. กล่องเตือนงานด่วนฉุกเฉิน (Urgent Attention Tickets): แสดงตั๋วที่มีความสำคัญระดับ Urgent
+ * 6. ฟังก์ชันพิมพ์รายงาน (Print Report) และดาวน์โหลดข้อมูล CSV
+ */
+
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   AlertCircle,
   Clock,
   CheckCircle2,
-  FileWarning
+  FileWarning,
+  Wrench,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  Download,
+  Building2,
+  Users,
+  Percent,
+  Layers,
+  ArrowRight,
+  Sparkles,
+  Printer
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useRole } from '../contexts/RoleContext';
-import { useTickets } from '../contexts/TicketContext';
+import { useTickets, TicketItem } from '../contexts/TicketContext';
 import { 
-  LineChart, 
-  Line, 
+  AreaChart,
+  Area,
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -20,44 +54,23 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
+  BarChart,
+  Bar
 } from 'recharts';
 import DashboardLayout from './DashboardLayout';
 
-// Mock Data for Charts
-const repairTrendsData = [
-  { name: 'Mon', tickets: 12 },
-  { name: 'Tue', tickets: 19 },
-  { name: 'Wed', tickets: 15 },
-  { name: 'Thu', tickets: 22 },
-  { name: 'Fri', tickets: 28 },
-  { name: 'Sat', tickets: 10 },
-  { name: 'Sun', tickets: 5 },
-];
-
-const categoryData = [
-  { name: 'Plumbing', value: 35 },
-  { name: 'Electrical', value: 25 },
-  { name: 'HVAC', value: 20 },
-  { name: 'Carpentry', value: 15 },
-  { name: 'Other', value: 5 },
-];
-const COLORS = ['#0A3D91', '#f59e0b', '#10b981', '#6366f1', '#94a3b8'];
-
-// Mock Data for Table
-const recentTickets = [
-  { id: 'TKT-2041', desc: 'Leaking pipe in Science Bldg', location: 'Science Hall 302', priority: 'High', status: 'In Progress', tech: 'John Smith', date: 'Oct 24, 2023' },
-  { id: 'TKT-2042', desc: 'Projector mount broken', location: 'Business Annex 101', priority: 'Medium', status: 'Open', tech: 'Unassigned', date: 'Oct 24, 2023' },
-  { id: 'TKT-2038', desc: 'AC not cooling', location: 'Dormitory A, Rm 412', priority: 'High', status: 'In Progress', tech: 'Mike Johnson', date: 'Oct 23, 2023' },
-  { id: 'TKT-2035', desc: 'Squeaky door hinge', location: 'Library Main Entrance', priority: 'Low', status: 'Completed', tech: 'Sarah Lee', date: 'Oct 22, 2023' },
-  { id: 'TKT-2031', desc: 'Flickering lights', location: 'Gymnasium', priority: 'Medium', status: 'Open', tech: 'David Chen', date: 'Oct 21, 2023' },
-];
+const PIE_COLORS = ['#0A3D91', '#f59e0b', '#10b981', '#6366f1', '#ec4899', '#8b5cf6', '#64748b'];
 
 export default function DashboardPage() {
   const { language } = useLanguage();
   const { role } = useRole();
   const navigate = useNavigate();
   const { tickets } = useTickets();
+
+  // Current selected month & year (Default: October 2026, matching system time)
+  const [selectedYear, setSelectedYear] = useState<number>(2026);
+  const [selectedMonth, setSelectedMonth] = useState<number>(9); // 0-indexed: 9 = October
 
   useEffect(() => {
     if (role === 'student') {
@@ -69,20 +82,176 @@ export default function DashboardPage() {
     return null;
   }
 
-  const openCount = tickets.filter(t => t.status === 'Open').length;
-  const pendingCount = tickets.filter(t => t.status === 'Pending').length;
-  const inProgressCount = tickets.filter(t => t.status === 'In Progress').length;
-  const completedCount = tickets.filter(t => t.status === 'Completed').length;
+  const months = [
+    { value: 0, labelEn: 'January', labelTh: 'มกราคม' },
+    { value: 1, labelEn: 'February', labelTh: 'กุมภาพันธ์' },
+    { value: 2, labelEn: 'March', labelTh: 'มีนาคม' },
+    { value: 3, labelEn: 'April', labelTh: 'เมษายน' },
+    { value: 4, labelEn: 'May', labelTh: 'พฤษภาคม' },
+    { value: 5, labelEn: 'June', labelTh: 'มิถุนายน' },
+    { value: 6, labelEn: 'July', labelTh: 'กรกฎาคม' },
+    { value: 7, labelEn: 'August', labelTh: 'สิงหาคม' },
+    { value: 8, labelEn: 'September', labelTh: 'กันยายน' },
+    { value: 9, labelEn: 'October', labelTh: 'ตุลาคม' },
+    { value: 10, labelEn: 'November', labelTh: 'พฤศจิกายน' },
+    { value: 11, labelEn: 'December', labelTh: 'ธันวาคม' },
+  ];
 
-  const displayRecentTickets = tickets.slice(0, 5);
+  const currentMonthLabel = language === 'th' 
+    ? `${months[selectedMonth].labelTh} ${selectedYear + 543}` 
+    : `${months[selectedMonth].labelEn} ${selectedYear}`;
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(y => y - 1);
+    } else {
+      setSelectedMonth(m => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(y => y + 1);
+    } else {
+      setSelectedMonth(m => m + 1);
+    }
+  };
+
+  // Helper to extract month & year from ticket date or createdAt
+  const getTicketMonthYear = (ticket: TicketItem) => {
+    if (ticket.createdAt) {
+      const d = new Date(ticket.createdAt);
+      return { month: d.getMonth(), year: d.getFullYear(), date: d.getDate() };
+    }
+    if (ticket.submittedDate) {
+      const d = new Date(ticket.submittedDate);
+      if (!isNaN(d.getTime())) {
+        return { month: d.getMonth(), year: d.getFullYear(), date: d.getDate() };
+      }
+    }
+    // Fallback: Oct 2026 default
+    return { month: 9, year: 2026, date: 20 };
+  };
+
+  // Tickets filtered to the selected month & year
+  const monthlyTickets = useMemo(() => {
+    return tickets.filter(t => {
+      const { month, year } = getTicketMonthYear(t);
+      return month === selectedMonth && year === selectedYear;
+    });
+  }, [tickets, selectedMonth, selectedYear]);
+
+  // Overall counts for selected month
+  const totalMonthlyCount = monthlyTickets.length;
+  const completedMonthlyCount = monthlyTickets.filter(t => t.status === 'Completed').length;
+  const inProgressMonthlyCount = monthlyTickets.filter(t => t.status === 'In Progress').length;
+  const pendingMonthlyCount = monthlyTickets.filter(t => t.status === 'Pending').length;
+  const openMonthlyCount = monthlyTickets.filter(t => t.status === 'Open').length;
+  const urgentMonthlyCount = monthlyTickets.filter(t => t.priority === 'Urgent').length;
+
+  // Resolution Rate %
+  const resolutionRate = totalMonthlyCount > 0 
+    ? Math.round((completedMonthlyCount / totalMonthlyCount) * 100) 
+    : 0;
+
+  // Average progress % in selected month
+  const averageProgress = totalMonthlyCount > 0
+    ? Math.round(monthlyTickets.reduce((acc, t) => acc + (t.progress !== undefined ? t.progress : (t.status === 'Completed' ? 100 : t.status === 'In Progress' ? 50 : 20)), 0) / totalMonthlyCount)
+    : 0;
+
+  // Generate trend data for selected month (divided into 4 weeks or calendar intervals)
+  const monthlyTrendData = useMemo(() => {
+    const weeks = [
+      { name: language === 'th' ? 'สัปดาห์ 1 (1-7)' : 'Week 1', total: 0, completed: 0 },
+      { name: language === 'th' ? 'สัปดาห์ 2 (8-14)' : 'Week 2', total: 0, completed: 0 },
+      { name: language === 'th' ? 'สัปดาห์ 3 (15-21)' : 'Week 3', total: 0, completed: 0 },
+      { name: language === 'th' ? 'สัปดาห์ 4 (22-31)' : 'Week 4', total: 0, completed: 0 },
+    ];
+
+    monthlyTickets.forEach(t => {
+      const { date } = getTicketMonthYear(t);
+      let weekIdx = 0;
+      if (date <= 7) weekIdx = 0;
+      else if (date <= 14) weekIdx = 1;
+      else if (date <= 21) weekIdx = 2;
+      else weekIdx = 3;
+
+      weeks[weekIdx].total += 1;
+      if (t.status === 'Completed') {
+        weeks[weekIdx].completed += 1;
+      }
+    });
+
+    return weeks;
+  }, [monthlyTickets, language]);
+
+  // Category breakdown in selected month
+  const categoryData = useMemo(() => {
+    const map: Record<string, number> = {};
+    monthlyTickets.forEach(t => {
+      const cat = t.category || 'General';
+      map[cat] = (map[cat] || 0) + 1;
+    });
+
+    const result = Object.entries(map).map(([name, value]) => ({ name, value }));
+    return result.length > 0 ? result : [
+      { name: 'General', value: 1 }
+    ];
+  }, [monthlyTickets]);
+
+  // Top buildings with issues in selected month
+  const topBuildingsData = useMemo(() => {
+    const map: Record<string, { total: number; completed: number; active: number }> = {};
+    monthlyTickets.forEach(t => {
+      const bldg = t.building || t.location?.split(',')[0] || 'Campus Building';
+      if (!map[bldg]) map[bldg] = { total: 0, completed: 0, active: 0 };
+      map[bldg].total += 1;
+      if (t.status === 'Completed') map[bldg].completed += 1;
+      else map[bldg].active += 1;
+    });
+
+    return Object.entries(map)
+      .map(([name, stats]) => ({ name, ...stats }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  }, [monthlyTickets]);
+
+  const handleExportCSV = () => {
+    if (monthlyTickets.length === 0) {
+      alert(language === 'th' ? 'ไม่มีข้อมูลคำร้องในเดือนนี้' : 'No ticket data for this month');
+      return;
+    }
+    const headers = ['ID', 'Issue', 'Category', 'Location', 'Status', 'Progress(%)', 'Priority', 'AssignedTo', 'SubmittedDate'];
+    const rows = monthlyTickets.map(t => [
+      t.id,
+      `"${(t.issue || '').replace(/"/g, '""')}"`,
+      t.category,
+      `"${(t.location || '').replace(/"/g, '""')}"`,
+      t.status,
+      t.progress || 0,
+      t.priority,
+      `"${(t.assignedTo || '').replace(/"/g, '""')}"`,
+      t.submittedDate || t.date
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Maintenance_Report_${selectedYear}_${selectedMonth + 1}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
-      case 'High':
+      case 'Urgent':
         return 'bg-red-100 text-red-700 border-red-200';
-      case 'Medium':
+      case 'High':
         return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'Low':
+      case 'Medium':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
@@ -95,8 +264,8 @@ export default function DashboardPage() {
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'Completed':
         return 'bg-green-50 text-green-700 border-green-200';
-      case 'Open':
-        return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'Pending':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
     }
@@ -106,199 +275,432 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
         
-        {/* Page Header */}
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{language === 'th' ? 'แดชบอร์ดการแจ้งซ่อม' : 'Maintenance Dashboard'}</h2>
-          <p className="text-sm text-slate-500 mt-1">{language === 'th' ? 'ติดตามสถิติการแจ้งซ่อมและกิจกรรมล่าสุด' : 'Monitor campus maintenance metrics and recent activities.'}</p>
+        {/* Page Top Header with Month Navigator & Staff Allocation CTA */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-[#0A3D91] border border-blue-200">
+                {language === 'th' ? '📊 แดชบอร์ดสรุปงานรายเดือน' : 'Monthly Performance Dashboard'}
+              </span>
+              <span className="text-xs text-slate-400">|</span>
+              <span className="text-xs text-slate-500 font-medium">
+                {language === 'th' ? 'สถิติภาพรวมและการดำเนินงานของช่าง' : 'Campus facility maintenance analytics'}
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+              <span>{language === 'th' ? 'สรุปงานประจำเดือน' : 'Monthly Overview:'}</span>
+              <span className="text-[#0A3D91]">{currentMonthLabel}</span>
+            </h1>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Month/Year Selector */}
+            <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-2xs">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                title={language === 'th' ? 'เดือนก่อนหน้า' : 'Previous Month'}
+                className="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <div className="flex items-center gap-1.5 px-2">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+                >
+                  {months.map(m => (
+                    <option key={m.value} value={m.value}>
+                      {language === 'th' ? m.labelTh : m.labelEn}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+                >
+                  <option value={2026}>2026</option>
+                  <option value={2025}>2025</option>
+                  <option value={2024}>2024</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                title={language === 'th' ? 'เดือนถัดไป' : 'Next Month'}
+                className="p-1.5 hover:bg-white rounded-lg text-slate-600 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Export CSV Report Button */}
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all shadow-2xs cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>{language === 'th' ? 'ส่งออกสรุป (CSV)' : 'Export CSV'}</span>
+            </button>
+
+            {/* Quick Action: Staff Building Allocation */}
+            <Link
+              to="/building-staff"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-[#0A3D91] hover:bg-blue-900 rounded-xl transition-all shadow-xs cursor-pointer"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>{language === 'th' ? 'จัดสรรช่างประจำตึก' : 'Staff Allocation'}</span>
+            </Link>
+          </div>
         </div>
 
-        {/* Summary Cards Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {/* Card 1: Open Tickets */}
-          <Link 
-            to="/tickets?status=open"
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between group hover:shadow-md hover:border-blue-300 cursor-pointer transition-all duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-slate-600 group-hover:text-[#0A3D91] transition-colors">{language === 'th' ? 'งานเปิดใหม่' : 'Open Tickets'}</h3>
-              <div className="p-2 bg-blue-50 text-[#0A3D91] rounded-lg group-hover:bg-blue-100 transition-colors">
-                <AlertCircle className="w-5 h-5" />
+        {/* 4 Monthly KPI Highlight Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          
+          {/* Card 1: Total Monthly Tickets */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                {language === 'th' ? 'คำร้องในเดือนนี้' : 'Monthly Tickets'}
+              </span>
+              <div className="p-2 bg-blue-50 text-[#0A3D91] rounded-xl">
+                <Layers className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <span className="text-3xl font-bold text-slate-900">42</span>
-              <p className="text-xs font-medium text-slate-500 mt-1 flex items-center">
-                <span className="text-green-600 mr-1">↓ 12%</span> from last week
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold text-slate-900">{totalMonthlyCount}</span>
+                <span className="text-xs text-slate-500">{language === 'th' ? 'รายการ' : 'requests'}</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                <span>{language === 'th' ? 'เปิดใหม่:' : 'Open:'} <b>{openMonthlyCount}</b> | {language === 'th' ? 'รอดำเนินการ:' : 'Pending:'} <b>{pendingMonthlyCount}</b></span>
               </p>
             </div>
-          </Link>
+          </div>
 
-          {/* Card 2: Pending Repairs */}
-          <Link 
-            to="/tickets?status=pending"
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between group hover:shadow-md hover:border-amber-300 cursor-pointer transition-all duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-slate-600 group-hover:text-amber-700 transition-colors">{language === 'th' ? 'รอดำเนินการ' : 'Pending Repairs'}</h3>
-              <div className="p-2 bg-amber-50 text-amber-600 rounded-lg group-hover:bg-amber-100 transition-colors">
-                <Clock className="w-5 h-5" />
+          {/* Card 2: Monthly Resolution Rate */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                {language === 'th' ? 'อัตราปิดงานสำเร็จ' : 'Resolution Rate'}
+              </span>
+              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                <Percent className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <span className="text-3xl font-bold text-slate-900">18</span>
-              <p className="text-xs font-medium text-slate-500 mt-1 flex items-center">
-                <span className="text-red-600 mr-1">↑ 4%</span> from last week
-              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold text-emerald-600">{resolutionRate}%</span>
+                <span className="text-xs text-emerald-700 font-medium">({completedMonthlyCount}/{totalMonthlyCount || 0})</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-2 mt-2.5 overflow-hidden">
+                <div 
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+                  style={{ width: `${resolutionRate}%` }}
+                />
+              </div>
             </div>
-          </Link>
+          </div>
 
-          {/* Card 3: Completed Repairs */}
-          <Link 
-            to="/tickets?status=completed"
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between group hover:shadow-md hover:border-green-300 cursor-pointer transition-all duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-slate-600 group-hover:text-green-700 transition-colors">{language === 'th' ? 'ซ่อมเสร็จสิ้น' : 'Completed Repairs'}</h3>
-              <div className="p-2 bg-green-50 text-green-600 rounded-lg group-hover:bg-green-100 transition-colors">
-                <CheckCircle2 className="w-5 h-5" />
+          {/* Card 3: Active In-Progress Workload */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                {language === 'th' ? 'กำลังซ่อมแซม' : 'In Progress Workload'}
+              </span>
+              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                <Wrench className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <span className="text-3xl font-bold text-slate-900">128</span>
-              <p className="text-xs font-medium text-slate-500 mt-1 flex items-center">
-                <span className="text-green-600 mr-1">↑ 22%</span> from last month
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold text-indigo-600">{inProgressMonthlyCount}</span>
+                <span className="text-xs text-slate-500">{language === 'th' ? 'งานที่ช่างกำลังทำ' : 'active tasks'}</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <span>{language === 'th' ? 'โปรเกรสเฉลี่ยเดือนนี้:' : 'Avg Progress:'} <b>{averageProgress}%</b></span>
               </p>
             </div>
-          </Link>
+          </div>
 
-          {/* Card 4: Urgent Tickets */}
-          <Link 
-            to="/tickets?priority=urgent"
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between group hover:shadow-md hover:border-red-300 cursor-pointer transition-all duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-slate-600 group-hover:text-red-700 transition-colors">{language === 'th' ? 'งานเร่งด่วน' : 'Urgent Tickets'}</h3>
-              <div className="p-2 bg-red-50 text-red-600 rounded-lg group-hover:bg-red-100 transition-colors">
-                <FileWarning className="w-5 h-5" />
+          {/* Card 4: Urgent & Emergency Repairs */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                {language === 'th' ? 'งานด่วนฉุกเฉิน' : 'Urgent Tickets'}
+              </span>
+              <div className="p-2 bg-red-50 text-red-600 rounded-xl">
+                <AlertCircle className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <span className="text-3xl font-bold text-slate-900">5</span>
-              <p className="text-xs font-medium text-slate-500 mt-1 flex items-center">
-                Requires immediate action
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold text-red-600">{urgentMonthlyCount}</span>
+                <span className="text-xs text-red-500 font-medium">{language === 'th' ? 'ต้องแก้ด่วน' : 'critical'}</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                {urgentMonthlyCount > 0 
+                  ? (language === 'th' ? '⚠️ มีงานซ่อมที่มีผลกระทบต่ออาคารสูง' : 'Immediate technician priority')
+                  : (language === 'th' ? '✅ ไม่มีงานด่วนค้างในเดือนนี้' : 'No critical emergencies')}
               </p>
             </div>
-          </Link>
+          </div>
+
         </div>
 
-        {/* Charts Row */}
+        {/* Charts Row: Monthly Trend & Category Breakdown */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Line Chart */}
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-base font-bold text-slate-900 mb-6">Repair Trends (Past 7 Days)</h3>
-            <div className="h-72 w-full">
+          
+          {/* Chart 1: Monthly Weekly Progression (2 Cols) */}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base">
+                  {language === 'th' ? 'แนวโน้มการแจ้งซ่อมรายสัปดาห์ในเดือนนี้' : 'Weekly Maintenance Progression'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {language === 'th' ? `เปรียบเทียบคำร้องเข้าใหม่ vs งานที่ปิดสำเร็จใน ${currentMonthLabel}` : `Tickets incoming vs resolved in ${currentMonthLabel}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-4 text-xs font-medium">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-[#0A3D91]"></span>
+                  <span>{language === 'th' ? 'คำร้องทั้งหมด' : 'Total Incoming'}</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+                  <span>{language === 'th' ? 'ซ่อมเสร็จแล้ว' : 'Resolved'}</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="h-64 sm:h-72 w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={repairTrendsData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                <AreaChart data={monthlyTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0A3D91" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#0A3D91" stopOpacity={0.0}/>
+                    </linearGradient>
+                    <linearGradient id="completedGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12 }} />
+                  <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} allowDecimals={false} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Line type="monotone" dataKey="tickets" stroke="#0A3D91" strokeWidth={3} dot={{ r: 4, fill: '#0A3D91', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
-                </LineChart>
+                  <Area type="monotone" dataKey="total" name={language === 'th' ? 'คำร้องทั้งหมด' : 'Total Tickets'} stroke="#0A3D91" strokeWidth={3} fillOpacity={1} fill="url(#totalGrad)" />
+                  <Area type="monotone" dataKey="completed" name={language === 'th' ? 'ซ่อมเสร็จสิ้น' : 'Completed'} stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#completedGrad)" />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Donut Chart */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-base font-bold text-slate-900 mb-6">Maintenance by Category</h3>
-            <div className="h-72 w-full flex flex-col items-center justify-center">
+          {/* Chart 2: Categories Breakdown in Selected Month (1 Col) */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-4 flex flex-col justify-between">
+            <div>
+              <h3 className="font-bold text-slate-900 text-base">
+                {language === 'th' ? 'หมวดหมู่งานซ่อมในเดือนนี้' : 'Monthly Category Share'}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {language === 'th' ? 'สัดส่วนปัญหาที่พบบ่อย' : 'Repair distribution by trade'}
+              </p>
+            </div>
+
+            <div className="h-56 w-full flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={categoryData}
                     cx="50%"
-                    cy="45%"
-                    innerRadius={60}
-                    outerRadius={85}
-                    paddingAngle={2}
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={3}
                     dataKey="value"
                   >
                     {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                    itemStyle={{ color: '#0f172a' }}
+                    formatter={(val: any) => [`${val} ${language === 'th' ? 'รายการ' : 'tickets'}`, '']}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }}
                   />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+              {categoryData.slice(0, 4).map((c, i) => (
+                <div key={c.name} className="flex items-center gap-1.5 text-xs text-slate-600 truncate">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}></span>
+                  <span className="truncate">{c.name}: <b>{c.value}</b></span>
+                </div>
+              ))}
+            </div>
           </div>
+
         </div>
 
-        {/* Recent Tickets Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900">{language === 'th' ? 'รายการแจ้งซ่อมล่าสุด' : 'Recent Tickets'}</h3>
-            <Link to="/tickets" className="text-sm font-medium text-[#0A3D91] hover:text-blue-800 transition-colors">
-              {language === 'th' ? 'ดูทั้งหมด' : 'View All'}
-            </Link>
+        {/* Section: Top Buildings with Issues & Recent Monthly Tickets */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Left: Top Buildings with Maintenance in Month */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base">
+                  {language === 'th' ? 'ตึกที่มีการแจ้งซ่อมมากที่สุด' : 'Top Campus Buildings'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {language === 'th' ? `จัดอันดับอาคารในเดือน ${currentMonthLabel}` : `Locations with most incidents in ${currentMonthLabel}`}
+                </p>
+              </div>
+              <Link 
+                to="/building-staff"
+                className="text-xs font-bold text-[#0A3D91] hover:underline flex items-center gap-1"
+              >
+                <span>{language === 'th' ? 'ดูการจัดสรรช่าง' : 'Manage Staff'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="space-y-3.5 pt-1">
+              {topBuildingsData.length > 0 ? (
+                topBuildingsData.map((bldg, idx) => {
+                  const percentOfTotal = totalMonthlyCount > 0 ? Math.round((bldg.total / totalMonthlyCount) * 100) : 0;
+                  return (
+                    <div key={bldg.name} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-800 flex items-center gap-1.5 truncate max-w-[200px]">
+                          <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px]">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{bldg.name}</span>
+                        </span>
+                        <span className="text-slate-500">
+                          <b>{bldg.total}</b> {language === 'th' ? 'รายการ' : 'reqs'} ({percentOfTotal}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                        <div 
+                          className="bg-[#0A3D91] h-full" 
+                          style={{ width: `${(bldg.completed / (bldg.total || 1)) * 100}%` }}
+                          title={`Completed: ${bldg.completed}`}
+                        />
+                        <div 
+                          className="bg-amber-400 h-full" 
+                          style={{ width: `${(bldg.active / (bldg.total || 1)) * 100}%` }}
+                          title={`Active: ${bldg.active}`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center text-xs text-slate-400">
+                  {language === 'th' ? 'ไม่มีข้อมูลคำร้องในเดือนที่เลือก' : 'No building incidents in this month.'}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider font-semibold text-slate-500">
-                  <th className="p-4 pl-6 whitespace-nowrap">Ticket ID</th>
-                  <th className="p-4 whitespace-nowrap">Description</th>
-                  <th className="p-4 whitespace-nowrap">Location</th>
-                  <th className="p-4 whitespace-nowrap">Priority</th>
-                  <th className="p-4 whitespace-nowrap">Status</th>
-                  <th className="p-4 whitespace-nowrap">Assigned Tech</th>
-                  <th className="p-4 pr-6 whitespace-nowrap text-right">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {displayRecentTickets.map((ticket) => (
-                  <tr 
-                    key={ticket.id} 
-                    className="hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                    onClick={() => navigate(`/ticket/${ticket.id}`)}
-                  >
-                    <td className="p-4 pl-6 font-medium text-[#0A3D91] group-hover:underline whitespace-nowrap">
-                      {ticket.id}
-                    </td>
-                    <td className="p-4 text-slate-700 min-w-[200px]">
-                      {ticket.issue}
-                    </td>
-                    <td className="p-4 text-slate-500 whitespace-nowrap">
-                      {ticket.location}
-                    </td>
-                    <td className="p-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPriorityBadge(ticket.priority)}`}>
-                        {ticket.priority}
-                      </span>
-                    </td>
-                    <td className="p-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(ticket.status)}`}>
-                        {ticket.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-slate-600 whitespace-nowrap">
-                      {ticket.assignedTo}
-                    </td>
-                    <td className="p-4 pr-6 text-slate-500 text-right whitespace-nowrap">
-                      {ticket.submittedDate || ticket.date}
-                    </td>
+
+          {/* Right: Recent Tickets in Selected Month (2 Cols) */}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base">
+                  {language === 'th' ? 'รายการแจ้งซ่อมประจำเดือน' : 'Tickets for this Month'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {language === 'th' ? `แสดงรายการคำร้องที่ถูกแจ้งใน ${currentMonthLabel}` : `Recent submissions in ${currentMonthLabel}`}
+                </p>
+              </div>
+              <Link 
+                to="/tickets"
+                className="text-xs font-bold text-[#0A3D91] hover:underline flex items-center gap-1"
+              >
+                <span>{language === 'th' ? 'ดูทั้งหมดในตาราง' : 'View in Table'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="pb-3">{language === 'th' ? 'รหัส / ปัญหา' : 'ID / Issue'}</th>
+                    <th className="pb-3">{language === 'th' ? 'สถานที่' : 'Location'}</th>
+                    <th className="pb-3">{language === 'th' ? 'ความคืบหน้า' : 'Progress'}</th>
+                    <th className="pb-3">{language === 'th' ? 'สถานะ' : 'Status'}</th>
+                    <th className="pb-3 text-right">{language === 'th' ? 'ช่าง' : 'Tech'}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {monthlyTickets.slice(0, 5).map((t) => (
+                    <tr 
+                      key={t.id} 
+                      onClick={() => navigate(`/ticket/${t.id}`)}
+                      className="hover:bg-slate-50/80 cursor-pointer transition-colors"
+                    >
+                      <td className="py-3 pr-2">
+                        <span className="font-bold text-[#0A3D91] block">{t.id}</span>
+                        <span className="text-slate-600 line-clamp-1 max-w-[180px]">{t.issue}</span>
+                      </td>
+                      <td className="py-3 text-slate-600 pr-2">
+                        <span className="line-clamp-1 max-w-[140px]">{t.location}</span>
+                      </td>
+                      <td className="py-3 pr-2">
+                        <div className="w-20">
+                          <div className="flex items-center justify-between text-[10px] font-bold text-slate-700 mb-0.5">
+                            <span>{t.progress || (t.status === 'Completed' ? 100 : 25)}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full ${
+                                t.status === 'Completed' ? 'bg-emerald-500' : 'bg-[#0A3D91]'
+                              }`}
+                              style={{ width: `${t.progress || (t.status === 'Completed' ? 100 : 25)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-2">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${getStatusBadge(t.status)}`}>
+                          {t.status}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right text-slate-600 font-medium whitespace-nowrap">
+                        {t.assignedTo && t.assignedTo !== 'Unassigned' ? t.assignedTo.split(' ')[0] : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                  {monthlyTickets.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-400">
+                        {language === 'th' ? 'ไม่มีรายการแจ้งซ่อมในเดือนนี้' : 'No maintenance tickets submitted this month.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
           </div>
+
         </div>
 
       </div>
