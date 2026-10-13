@@ -585,7 +585,7 @@ export default function DashboardPage() {
                   return (
                     <div key={bldg.name} className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-800 flex items-center gap-1.5 truncate max-w-[200px]">
+                        <span className="font-semibold text-slate-800 flex items-center gap-1.5 truncate max-w-50">
                           <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px]">
                             {idx + 1}
                           </span>
@@ -658,10 +658,10 @@ export default function DashboardPage() {
                     >
                       <td className="py-3 pr-2">
                         <span className="font-bold text-[#0A3D91] block">{t.id}</span>
-                        <span className="text-slate-600 line-clamp-1 max-w-[180px]">{t.issue}</span>
+                        <span className="text-slate-600 line-clamp-1 max-w-45">{t.issue}</span>
                       </td>
                       <td className="py-3 text-slate-600 pr-2">
-                        <span className="line-clamp-1 max-w-[140px]">{t.location}</span>
+                        <span className="line-clamp-1 max-w-35">{t.location}</span>
                       </td>
                       <td className="py-3 pr-2">
                         <div className="w-20">
