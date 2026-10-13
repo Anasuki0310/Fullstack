@@ -350,7 +350,7 @@ export default function BuildingStaffPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header Banner */}
-        <div className="bg-gradient-to-r from-[#0A3D91] via-blue-900 to-indigo-900 rounded-2xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
+        <div className="bg-linear-to-r from-[#0A3D91] via-blue-900 to-indigo-900 rounded-2xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
           
           <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -424,7 +424,7 @@ export default function BuildingStaffPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
-            <div className="relative min-w-[220px]">
+            <div className="relative min-w-55">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -724,7 +724,7 @@ export default function BuildingStaffPage() {
                             leadBldgs.map(b => (
                               <span
                                 key={b.id}
-                                className="text-[10px] font-medium bg-blue-50 text-blue-800 px-2 py-0.5 rounded border border-blue-200 truncate max-w-[200px]"
+                                className="text-[10px] font-medium bg-blue-50 text-blue-800 px-2 py-0.5 rounded border border-blue-200 truncate max-w-50"
                               >
                                 🏢 {language === 'th' ? b.nameTh : b.nameEn}
                               </span>
@@ -914,7 +914,7 @@ export default function BuildingStaffPage() {
                         <img src={av} alt="Avatar" className="w-full h-full object-cover" />
                         {techAvatar === av && (
                           <div className="absolute inset-0 bg-[#0A3D91]/40 flex items-center justify-center text-white">
-                            <Check className="w-4 h-4 stroke-[3]" />
+                            <Check className="w-4 h-4 stroke-3" />
                           </div>
                         )}
                       </button>

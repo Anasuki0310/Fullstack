@@ -343,12 +343,12 @@ export default function TicketsPage() {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider font-semibold text-slate-500">
                   <th className="p-4 pl-6 whitespace-nowrap">{language === 'th' ? 'รหัสแจ้งซ่อม' : 'Ticket ID'}</th>
-                  <th className="p-4 min-w-[180px]">{language === 'th' ? 'ปัญหา' : 'Issue'}</th>
+                  <th className="p-4 min-w-45">{language === 'th' ? 'ปัญหา' : 'Issue'}</th>
                   <th className="p-4 whitespace-nowrap">{language === 'th' ? 'หมวดหมู่' : 'Category'}</th>
                   <th className="p-4 whitespace-nowrap">{language === 'th' ? 'สถานที่' : 'Location'}</th>
                   <th className="p-4 whitespace-nowrap">{language === 'th' ? 'ความเร่งด่วน' : 'Priority'}</th>
                   <th className="p-4 whitespace-nowrap">{language === 'th' ? 'ช่างผู้รับผิดชอบ' : 'Assigned To'}</th>
-                  <th className="p-4 whitespace-nowrap min-w-[140px]">{language === 'th' ? 'ความคืบหน้า (Progress)' : 'Progress'}</th>
+                  <th className="p-4 whitespace-nowrap min-w-35">{language === 'th' ? 'ความคืบหน้า (Progress)' : 'Progress'}</th>
                   <th className="p-4 whitespace-nowrap">{language === 'th' ? 'สถานะ' : 'Status'}</th>
                   <th className="p-4 pr-6 whitespace-nowrap text-right">{language === 'th' ? 'จัดการ' : 'Action'}</th>
                 </tr>
@@ -605,7 +605,7 @@ export default function TicketsPage() {
               <button className="relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed">
                 Previous
               </button>
-              <button className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-[#0A3D91] border border-[#0A3D91] focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D91]">
+              <button className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-[#0A3D91] border border-[#0A3D91] focus:z-20 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[#0A3D91]">
                 1
               </button>
               <button className="relative inline-flex items-center rounded-r-md px-3 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0">
