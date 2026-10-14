@@ -20,7 +20,7 @@
 - React 19 และ TypeScript
 - Vite และ Tailwind CSS
 - React Router
-- Firebase Authentication
+- Google OAuth via `@react-oauth/google`
 - CMU OAuth 2.0 และ Google Identity Services
 - Recharts, Lucide React และ Motion
 
@@ -44,7 +44,7 @@ npm install
 copy .env.example .env
 ```
 
-บน macOS หรือ Linux ใช้ `cp .env.example .env` จากนั้นแก้ค่าใน `.env` ให้ตรงกับ Firebase, Google OAuth, CMU OAuth และ Backend API
+บน macOS หรือ Linux ใช้ `cp .env.example .env` จากนั้นแก้ค่าใน `.env` ให้ตรงกับ Google OAuth, CMU OAuth และ Backend API
 
 ## ตัวแปรสภาพแวดล้อมที่สำคัญ
 
@@ -55,12 +55,6 @@ copy .env.example .env
 | `CMU_OAUTH_CLIENT_SECRET` | Client Secret สำหรับ CMU OAuth |
 | `VITE_CMU_OAUTH_REDIRECT_URI` | URL สำหรับรับผลลัพธ์จาก CMU OAuth |
 | `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID |
-| `VITE_FIREBASE_API_KEY` | Firebase API Key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth Domain |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage Bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Messaging Sender ID |
-| `VITE_FIREBASE_APP_ID` | Firebase App ID |
 
 ห้าม commit ไฟล์ `.env` หรือเปิดเผยค่า Client Secret ใน repository สาธารณะ
 
@@ -72,7 +66,7 @@ copy .env.example .env
 npm run dev
 ```
 
-เปิดเบราว์เซอร์ที่ [http://localhost:3000](http://localhost:3000)
+เปิดเบราว์เซอร์ที่ [http://localhost:5173](http://localhost:5173)
 
 คำสั่งอื่นที่ใช้บ่อย:
 
@@ -103,7 +97,7 @@ src/
 ├── components/ui/    คอมโพเนนต์ UI ที่ใช้ซ้ำ เช่น Toast
 ├── contexts/         Global state และ business logic
 ├── hooks/            React hooks ที่ใช้ซ้ำ
-├── lib/              Firebase, OAuth และ utility functions
+├── lib/              OAuth และ utility functions
 ├── App.tsx           Provider และ routing หลัก
 ├── main.tsx          จุดเริ่มต้นของแอปพลิเคชัน
 └── index.css         Global styles และ Tailwind CSS

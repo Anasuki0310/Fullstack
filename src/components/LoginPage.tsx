@@ -1,6 +1,7 @@
 
 
 import React, { useState } from 'react';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import {
   Building2,
@@ -111,23 +112,28 @@ export default function LoginPage() {
     navigate('/tickets');
   };
 
-  const handleGoogleLogin = async () => {
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const result = await signInWithGoogle(tokenResponse.access_token);
+        if (result.success) navigate('/tickets');
+        else setErrorMessage(result.error || 'Failed to sign in with Google.');
+      } catch (err: unknown) {
+        setErrorMessage(err instanceof Error ? err.message : 'Google OAuth sign-in encountered an error.');
+      } finally {
+        setIsGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      setErrorMessage('Google OAuth sign-in was cancelled or failed.');
+      setIsGoogleLoading(false);
+    },
+  });
+
+  const handleGoogleLogin = () => {
     setIsGoogleLoading(true);
     setErrorMessage('');
-
-    try {
-      const result = await signInWithGoogle();
-      if (result.success) {
-        navigate('/tickets');
-      } else {
-        setErrorMessage(result.error || 'Failed to sign in with Google.');
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Google OAuth sign-in encountered an error.';
-      setErrorMessage(msg);
-    } finally {
-      setIsGoogleLoading(false);
-    }
+    googleLogin();
   };
 
   const handleCmuOAuthLogin = () => {

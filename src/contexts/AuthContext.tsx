@@ -1,15 +1,11 @@
 
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { User, updateProfile as updateFirebaseProfile } from 'firebase/auth';
 import {
-  googleSignIn,
-  logoutUser,
-  initAuth,
   fetchGoogleUserProfile,
   GoogleUserInfo,
-  getCachedAccessToken
-} from '../lib/firebase';
+  clearGoogleSession,
+} from '../lib/googleOAuth';
 import { useRole } from './RoleContext';
 import {
   CMUUserInfo,
@@ -28,7 +24,7 @@ export interface UserCustomData {
 }
 
 interface AuthContextType {
-  firebaseUser: User | null;
+  googleUser: GoogleUserInfo | null;
   googleProfile: GoogleUserInfo | null;
   cmuUser: CMUUserInfo | null;
   accessToken: string | null;
@@ -42,7 +38,7 @@ interface AuthContextType {
   isGoogleUser: boolean;
   isCmuUser: boolean;
   loading: boolean;
-  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: (accessToken: string) => Promise<{ success: boolean; error?: string }>;
   signInWithCmu: (userInfo: CMUUserInfo) => void;
   signOut: () => Promise<void>;
   setManualUser: (email: string, name?: string) => void;
@@ -54,7 +50,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { role, setRole } = useRole();
-  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [googleProfile, setGoogleProfile] = useState<GoogleUserInfo | null>(null);
   const [cmuUser, setCmuUser] = useState<CMUUserInfo | null>(() => getStoredCMUUser());
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -81,58 +76,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    const unsubscribe = initAuth(
-      async (user, token) => {
-        setFirebaseUser(user);
-        if (token) {
-          setAccessToken(token);
-          const profile = await fetchGoogleUserProfile(token);
-          if (profile) setGoogleProfile(profile);
-        } else {
+    const savedToken = sessionStorage.getItem('google_access_token');
+    const savedUser = sessionStorage.getItem('google_user');
+    if (savedToken && savedUser) {
+      setAccessToken(savedToken);
+      setGoogleProfile(JSON.parse(savedUser) as GoogleUserInfo);
+    }
+    setLoading(false);
+  }, []);
 
-
-          setGoogleProfile({
-            sub: user.uid,
-            name: user.displayName || 'Google User',
-            email: user.email || '',
-            picture: user.photoURL || undefined,
-            email_verified: user.emailVerified,
-          });
-        }
-
-
-        const savedRole = localStorage.getItem('app_user_role');
-        if (!savedRole) {
-          if (user.email === 'bimcub12345@cmu.ac.th' || user.email?.includes('admin')) {
-            setRole('admin');
-          } else {
-            setRole('student');
-          }
-        }
-
-        setLoading(false);
-      },
-      () => {
-        setFirebaseUser(null);
-        setGoogleProfile(null);
-        setAccessToken(null);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [setRole]);
-
-  const signInWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+  const signInWithGoogle = async (token: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true);
-      const res = await googleSignIn();
-      setFirebaseUser(res.user);
-      setAccessToken(res.accessToken);
-      setGoogleProfile(res.googleProfile);
+      const profile = await fetchGoogleUserProfile(token);
+      setAccessToken(token);
+      setGoogleProfile(profile);
+      sessionStorage.setItem('google_access_token', token);
+      sessionStorage.setItem('google_user', JSON.stringify(profile));
 
 
-      if (res.user.email === 'bimcub12345@cmu.ac.th' || res.user.email?.includes('admin')) {
+      if (profile.email === 'bimcub12345@cmu.ac.th' || profile.email.includes('admin')) {
         setRole('admin');
       } else {
         setRole('student');
@@ -185,12 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    try {
-      await logoutUser();
-    } catch (e) {
-      console.warn('Logout error', e);
-    }
-    setFirebaseUser(null);
+    clearGoogleSession();
     setGoogleProfile(null);
     setAccessToken(null);
     setManualUserInternal(null);
@@ -221,23 +179,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn('Failed to save user custom data to localStorage', e);
     }
 
-    if (firebaseUser) {
-      try {
-        await updateFirebaseProfile(firebaseUser, {
-          displayName: updated.displayName || firebaseUser.displayName || undefined,
-          photoURL: updated.photoURL || firebaseUser.photoURL || undefined,
-        });
-      } catch (err) {
-        console.warn('Failed to sync updated profile to Firebase User', err);
-      }
-    }
   };
 
   const resetProfileToGoogle = () => {
     const updated: UserCustomData = {
       ...customData,
-      displayName: googleProfile?.name || firebaseUser?.displayName || '',
-      photoURL: googleProfile?.picture || firebaseUser?.photoURL || '',
+      displayName: googleProfile?.name || '',
+      photoURL: googleProfile?.picture || '',
     };
     setCustomData(updated);
     try {
@@ -247,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const isGoogleUser = Boolean(firebaseUser && (googleProfile || firebaseUser.email));
+  const isGoogleUser = Boolean(googleProfile);
   const isCmuUser = Boolean(cmuUser);
 
   const displayName = useMemo(() => {
@@ -260,28 +208,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return `${cmuUser.firstname_EN} ${cmuUser.lastname_EN}`.trim();
     }
     if (googleProfile?.name) return googleProfile.name;
-    if (firebaseUser?.displayName) return firebaseUser.displayName;
     if (manualUser?.name) return manualUser.name;
     return role === 'admin' ? 'Admin Supakorn Suksomboon' : 'Supakorn Suksomboon';
-  }, [customData.displayName, cmuUser, googleProfile, firebaseUser, manualUser, role]);
+  }, [customData.displayName, cmuUser, googleProfile, manualUser, role]);
 
   const email = useMemo(() => {
     if (cmuUser?.cmuitaccount) return cmuUser.cmuitaccount;
     if (googleProfile?.email) return googleProfile.email;
-    if (firebaseUser?.email) return firebaseUser.email;
     if (manualUser?.email) return manualUser.email;
     return role === 'admin' ? 'facilities.admin@cmu.ac.th' : 'student@cmu.ac.th';
-  }, [cmuUser, googleProfile, firebaseUser, manualUser, role]);
+  }, [cmuUser, googleProfile, manualUser, role]);
 
   const photoURL = useMemo(() => {
     if (customData.photoURL && customData.photoURL.trim() !== '') {
       return customData.photoURL;
     }
     if (googleProfile?.picture) return googleProfile.picture;
-    if (firebaseUser?.photoURL) return firebaseUser.photoURL;
 
 return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><rect width="128" height="128" fill="%23E2E8F0"/><circle cx="64" cy="46" r="24" fill="%2394A3B8"/><path d="M24 114c0-22 18-38 40-38s40 16 40 38" fill="%2394A3B8"/></svg>';
-  }, [customData.photoURL, googleProfile, firebaseUser]);
+  }, [customData.photoURL, googleProfile]);
 
   const studentId = useMemo(() => {
     if (cmuUser?.student_id) return cmuUser.student_id;
@@ -298,15 +243,15 @@ return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox=
     return customData.major || 'Integrated Engineering';
   }, [customData.major]);
 
-  const isAuthenticated = Boolean(firebaseUser || manualUser || cmuUser);
+  const isAuthenticated = Boolean(googleProfile || manualUser || cmuUser);
 
   return (
     <AuthContext.Provider
       value={{
-        firebaseUser,
+        googleUser: googleProfile,
         googleProfile,
         cmuUser,
-        accessToken: accessToken || getCachedAccessToken(),
+        accessToken,
         displayName,
         email,
         photoURL,

@@ -35,9 +35,9 @@ export const DEFAULT_CMU_CLIENT_SECRET = 'hmYddTEV2GJr5MVXl2UaBIdjxGGpUPxJj86GFz
 
 
 export const CPE_REGISTERED_REDIRECT_URIS = [
-  { group: 'localhost', label: 'Localhost - /api/auth/callback (แนะนำ)', url: 'http://localhost:3000/api/auth/callback' },
-  { group: 'localhost', label: 'Localhost - /callback', url: 'http://localhost:3000/callback' },
-  { group: 'localhost', label: 'Localhost - /auth/callback', url: 'http://localhost:3000/auth/callback' },
+  { group: 'localhost', label: 'Localhost - /api/auth/callback (แนะนำ)', url: 'http://localhost:5173/api/auth/callback' },
+  { group: 'localhost', label: 'Localhost - /callback', url: 'http://localhost:5173/callback' },
+  { group: 'localhost', label: 'Localhost - /auth/callback', url: 'http://localhost:5173/auth/callback' },
   { group: 'fsg11', label: 'FSG 11 - /auth/callback', url: 'https://fsg11.cpecmu.com/auth/callback' },
   { group: 'fsg12', label: 'FSG 12 - /callback', url: 'https://fsg12.cpecmu.com/callback' },
   { group: 'fsg12', label: 'FSG 12 - /auth/callback', url: 'https://fsg12.cpecmu.com/auth/callback' },
@@ -81,13 +81,13 @@ export function getCMUAuthConfig(): CMUAuthConfig {
   const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
 
-  let defaultRedirect = 'http://localhost:3000/api/auth/callback';
+  let defaultRedirect = 'http://localhost:5173/api/auth/callback';
   if (currentHost.includes('cpecmu.com')) {
     defaultRedirect = `${currentOrigin}/callback`;
   } else if (currentHost.includes('localhost') || currentHost.includes('127.0.0.1')) {
-    defaultRedirect = 'http://localhost:3000/api/auth/callback';
+    defaultRedirect = 'http://localhost:5173/api/auth/callback';
   } else {
-    defaultRedirect = 'http://localhost:3000/api/auth/callback';
+    defaultRedirect = 'http://localhost:5173/api/auth/callback';
   }
 
   const envClientId = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_CMU_OAUTH_CLIENT_ID || DEFAULT_CMU_CLIENT_ID;
@@ -248,7 +248,7 @@ export async function exchangeCMUCode(
 
     if (cleanCode.includes('?') || cleanCode.includes('code=')) {
       try {
-        const urlObj = new URL(cleanCode.startsWith('http') ? cleanCode : `http://localhost:3000/${cleanCode}`);
+        const urlObj = new URL(cleanCode.startsWith('http') ? cleanCode : `http://localhost:5173/${cleanCode}`);
         const parsedCode = urlObj.searchParams.get('code');
         if (parsedCode) {
           cleanCode = parsedCode;
